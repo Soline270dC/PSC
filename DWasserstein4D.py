@@ -21,12 +21,12 @@ def dWasserstein4D(x, y, niter = 100) :
     ==output==
     d - Wasserstein distance between the two distributions computed as such : draw a random vector of norm one from the 4D-sphere, project x and y on the vector line borne by this vector and compute 1D Wasserstein distance between the two projected vectors. Repeat and compute the mean
     '''
-    dist = np.empty(niter)
+    dist = 0
     for i in range(niter) :
         # draw a 4D vector at random following a N(0, I_4)
         u = sps.norm.rvs(loc = 0, scale = 1, size = 4)
         u = (u/np.linalg.norm(u))[:,np.newaxis]
         x_u = project(x, u)
         y_u = project(y, u)
-        dist[i] = sps.wasserstein_distance(x_u, y_u)
-    return dist.mean()
+        dist += sps.wasserstein_distance(x_u, y_u)
+    return dist/niter
