@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 from time import time
 
 dataroot = "data"
+name = "result2"
 batch_size = 50
-nz = 20
+nz = 50
 num_epochs = 20
 lr = 0.0002
 beta1 = 0.5
@@ -35,9 +36,9 @@ for i in range(n) :
 fig = plt.figure()
 ax = fig.add_subplot()
 ax.contour(scores)
-fig.savefig("grid_search/result")
+fig.savefig("grid_search/"+name)
 
-np.save("grid_search/result", scores)
+np.save("grid_search/"+name, scores)
 
 f = open("grid_search/result.txt", 'a')
 f.write(f"\ntesting {testing}\n")
