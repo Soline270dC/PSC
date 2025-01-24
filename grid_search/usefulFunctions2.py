@@ -4,45 +4,64 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 from grid_search.constructArchitecture import evalArchitecture
-from itertools import product
 from DWasserstein4D import dWasserstein4D
+import torch.nn as nn
+from grid_search.usefulFunctions import weights_init, getData
 
-def getData(dataroot, batch_size) :
-    class Dataset():
-        def __init__(self, root = dataroot):
-            self.root = root
-            self.dataset = self.build_dataset()
-            self.length = self.dataset.shape[1]
+def evalArchitecture2(nz) :
+    class Generator(nn.Module):
+        def __init__(self, ngpu, nz = nz):
+            super(Generator, self).__init__()
+            self.ngpu = ngpu
+            self.main = nn.Sequential(
+                nn.Linear(nz, 40, bias = False),
+                nn.ReLU(True),
+                nn.Linear(40, 30, bias = False),
+                nn.ReLU(True),
+                nn.Linear(30, 30, bias = False),
+                nn.ReLU(True),
+                nn.Linear(30, 1, bias = False),
+                nn.ReLU(True)
+            )
 
-        def __len__(self):
-            return self.length
-
-        def __getitem__(self, idx):
-            step = self.dataset[:, idx]
-            return step
-
-        def build_dataset(self):
-            dataset = np.load(os.path.join(self.root, "round1.npy")).T
-            dataset = torch.from_numpy(dataset).float()
-            dataset = torch.unsqueeze(dataset, -1)
-            return dataset
-
-    dataset = Dataset(dataroot)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
-                                            shuffle=False)
-    return dataloader
-
-def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find('Linear') != -1:
-        n = m.in_features
-        y = 1.0/np.sqrt(n)
-        # nn.init.normal_(m.weight.data, 0.0, y)
-        # nn.init.uniform_(m.weight.data, -y, y)
-        nn.init.normal_(m.weight.data, 0.0, 1e-2)
+        def forward(self, input):
+            return self.main(input)
     
-def initGenDis(nNeuronsGen, nNeuronsDis, device, ngpu, nz, weights_init = weights_init) :
-    Generator, Discriminator = evalArchitecture(nz, nNeuronsGen, nNeuronsDis)
+    class Discriminator(nn.Module):
+        def __init__(self, ngpu):
+            super(Discriminator, self).__init__()
+            self.ngpu = ngpu
+            self.main = nn.Sequential(
+                nn.Linear(1, 50, bias = False),
+                nn.ReLU(True),
+                nn.Linear(50, 30, bias = False),
+                nn.ReLU(True),
+                nn.Linear(30, 50, bias = False),
+                nn.ReLU(True),
+                nn.Linear(50, 50, bias = False),
+                nn.ReLU(True),
+                nn.Linear(50, 50, bias = False),
+                nn.ReLU(True),
+                nn.Linear(50, 1, bias = False),
+                nn.Sigmoid()
+            )
+
+        def forward(self, input):
+            return self.main(input)
+        
+    return Generator, Discriminator
+
+'''
+hyperparamètres :
+- batch_size : [2;100]
+- num_epoch : [10;50]
+- nz : [1;50]
+- lr : [1e-4;1e-5]
+- beta1 : [0;1]
+'''
+
+def initGenDis2(device, ngpu, nz, weights_init = weights_init) :
+    Generator, Discriminator = evalArchitecture2(nz)
     netG = Generator(ngpu).to(device)
     if (device.type == 'cuda') and (ngpu > 1):
         netG = nn.DataParallel(netG, list(range(ngpu)))
@@ -55,27 +74,10 @@ def initGenDis(nNeuronsGen, nNeuronsDis, device, ngpu, nz, weights_init = weight
 
     return netG, netD
 
-def getGrid(listLayers, listNeurons, listLayersDis = None, listNeuronsDis = None) :
-    '''
-    ==output==
-    list of tuples (nLayersGen, nNeuronsGen, nLayersDis, nNeuronsDis) for all combinations
-    '''
-    gen = []
-    for n in listLayers :
-        temp = list(product(listNeurons, repeat = n))
-        gen += [x for x in temp]
-    
-    if listLayersDis is not None and listNeuronsDis is not None :
-        dis = []
-        for n in listLayersDis :
-            temp = list(product(listNeuronsDis, repeat = n))
-            dis += [x for x in temp]
-    else :
-        dis = gen
-    
-    return [[[x, y] for x in gen] for y in dis]
+def getGrid2(lrs, beta1s, num_epochs, nzs) :
+    return [[[[(lr, beta1, num_epoch, nz) for lr in lrs] for beta1 in beta1s] for num_epoch in num_epochs] for nz in nzs]
 
-def train(netG, netD, lr, beta1, num_epochs, dataloader, device, nz, dataroot) :
+def train2(netG, netD, lr, beta1, num_epochs, nz, dataloader, device, dataroot) :
     criterion = nn.BCELoss()
     real_label = 1.
     fake_label = 0.
