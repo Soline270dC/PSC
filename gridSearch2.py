@@ -43,7 +43,7 @@ for i in range(n) :
             print(f"\t\tExecuting the {k+1}{'st' if (k+1)%10 == 1 and (k+1)//100 != 11 else 'nd' if (k+1)%10 == 2 and (k+1)//100 != 12 else 'rd' if (k+1)%10 == 3 else 'th'} line out of {mm}")
             for l, t in enumerate(grid[i][j][k]) :
                 scores[i, j, k, l] = train2(
-                    *initGenDis2(device, ngpu, t[3], weights_init),
+                    *initGenDis2(device, ngpu, t[3]),
                     *t, dataloader, device, dataroot
                     )
         print(f"\t\texecution time of the subline : {time() - t1}")
@@ -51,9 +51,9 @@ for i in range(n) :
 
 arg_min = np.unravel_index(scores.argmin(), scores.shape)
 
-np.save("grid_search/"+name, scores)
+np.save("grid_search/results2/"+name, scores)
 
-f = open("grid_search/result2nd.txt", 'a')
+f = open("grid_search/results2/result2nd.txt", 'a')
 f.write(f"\ntesting {testing}\n")
 f.write(f"results : score of {scores.min()} for {grid[arg_min[0]][arg_min[1]][arg_min[2]][arg_min[3]]}\n")
 print("Done !")
@@ -72,5 +72,5 @@ plt.colorbar(cont)
 ax.scatter(arg_min[0], arg_min[1], c = 'red', marker= "x", label = "minimal $d_W$")
 ax.legend()
 
-fig.savefig("grid_search/"+name)
+fig.savefig("grid_search/results2/"+name)
 

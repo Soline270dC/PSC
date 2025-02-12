@@ -8,7 +8,7 @@ from time import time
 from matplotlib import ticker
 
 dataroot = "data"
-name = "result3"
+name = "result4"
 batch_size = 50
 nz = 50
 num_epochs = 20
@@ -50,11 +50,11 @@ amin = amin = (scores.argmin()%len(grid[0]), scores.argmin()//len(grid[0]))
 # plt.colorbar(cont)
 # ax.scatter(*amin, c = 'red', marker= "x", label = "minimal $d_W$")
 # ax.legend()
-# fig.savefig("grid_search/"+name)
+# fig.savefig("grid_search/results1"+name)
 
 np.save("grid_search/"+name, scores)
 
-f = open("grid_search/result.txt", 'a')
+f = open("grid_search/results1/result.txt", 'a')
 f.write(f"\ntesting {testing}\n")
 f.write(f"results : score of {scores.min()} for {grid[amin[1]][amin[0]]}\n")
 print("Done !")

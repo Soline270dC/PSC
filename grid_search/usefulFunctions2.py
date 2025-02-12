@@ -3,10 +3,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from grid_search.constructArchitecture import evalArchitecture
 from DWasserstein4D import dWasserstein4D
 import torch.nn as nn
-from grid_search.usefulFunctions import weights_init, getData
 
 def evalArchitecture2(nz) :
     class Generator(nn.Module):
@@ -14,13 +12,13 @@ def evalArchitecture2(nz) :
             super(Generator, self).__init__()
             self.ngpu = ngpu
             self.main = nn.Sequential(
-                nn.Linear(nz, 40, bias = False),
+                nn.Linear(nz, 128, bias = False),
                 nn.ReLU(True),
-                nn.Linear(40, 30, bias = False),
+                nn.Linear(128, 256, bias = False),
                 nn.ReLU(True),
-                nn.Linear(30, 30, bias = False),
+                nn.Linear(256, 128, bias = False),
                 nn.ReLU(True),
-                nn.Linear(30, 1, bias = False),
+                nn.Linear(128, 1, bias = False),
                 nn.ReLU(True)
             )
 
@@ -32,17 +30,11 @@ def evalArchitecture2(nz) :
             super(Discriminator, self).__init__()
             self.ngpu = ngpu
             self.main = nn.Sequential(
-                nn.Linear(1, 50, bias = False),
-                nn.ReLU(True),
-                nn.Linear(50, 30, bias = False),
-                nn.ReLU(True),
-                nn.Linear(30, 50, bias = False),
-                nn.ReLU(True),
-                nn.Linear(50, 50, bias = False),
-                nn.ReLU(True),
-                nn.Linear(50, 50, bias = False),
-                nn.ReLU(True),
-                nn.Linear(50, 1, bias = False),
+                nn.Linear(1, 128, bias = False),
+                nn.LeakyReLU(0.2),
+                nn.Linear(128, 64, bias = False),
+                nn.LeakyReLU(0.2),
+                nn.Linear(64, 1, bias = False),
                 nn.Sigmoid()
             )
 
@@ -60,17 +52,15 @@ hyperparamètres :
 - beta1 : [0;1]
 '''
 
-def initGenDis2(device, ngpu, nz, weights_init = weights_init) :
+def initGenDis2(device, ngpu, nz) :
     Generator, Discriminator = evalArchitecture2(nz)
     netG = Generator(ngpu).to(device)
     if (device.type == 'cuda') and (ngpu > 1):
         netG = nn.DataParallel(netG, list(range(ngpu)))
-    netG.apply(weights_init)
 
     netD = Discriminator(ngpu).to(device)
     if (device.type == 'cuda') and (ngpu > 1):
         netD = nn.DataParallel(netD, list(range(ngpu)))
-    netD.apply(weights_init)
 
     return netG, netD
 
