@@ -19,7 +19,7 @@ def function_to_optimize(batch_size, nz, num_epochs, lr) :
     
     netG, netD = initGenDis2(device, ngpu, nz)
 
-    return train2(netG, netD, lr, beta1, num_epochs, nz, dataloader, device, dataroot)
+    return -train2(netG, netD, lr, beta1, num_epochs, nz, dataloader, device, dataroot)
 
 # Bounded region of parameter space
 pbounds = {'batch_size': (10, 50), 'nz': (1, 50), 'num_epochs': (30, 120), 'lr': (1e-5, 1e-4)}
@@ -32,8 +32,12 @@ optimizer = BayesianOptimization(
 )
 
 optimizer.maximize(
-    init_points=2,
-    n_iter=3,
+    init_points=5,
+    n_iter=20,
 )
 
 print(optimizer.max)
+
+f = open("bayesian_optimization/records.txt", 'a')
+f.write(str(optimizer.max)+'\n\n')
+f.close()
