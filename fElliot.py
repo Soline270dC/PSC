@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
 import pandas as pd
 
 import matplotlib.pyplot as plt
@@ -77,12 +77,13 @@ class YieldDataset(Dataset):
 
 def getDalatoader(batch_size) :
     df = init_data()    
-    yield_dataset = YieldDataset(df) #Crée un objet de format YieldDataset à partir du dataframe initial
+    yield_dataset, valid_data = random_split(YieldDataset(df), [0.8, 0.2]) #Crée un objet de format YieldDataset à partir du dataframe initial
+    valid_data = valid_data.dataset.data[valid_data.indices]
     dataloader = DataLoader(yield_dataset, batch_size=batch_size, shuffle=True)
 
-    all_data = torch.cat([batch for batch in dataloader], dim=0)  # Combine tous les batches
-    all_data_np = all_data.numpy()                               #Cobine en tableau np
-    return dataloader, all_data_np
+    # all_data = torch.cat([batch for batch in dataloader], dim=0)  # Combine tous les batches
+    # all_data_np = all_data.numpy()                               #Cobine en tableau np
+    return dataloader, valid_data
 
 # dataloader, all_data_np = getDalatoader(batch_size)
 
