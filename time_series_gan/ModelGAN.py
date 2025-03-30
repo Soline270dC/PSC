@@ -63,6 +63,8 @@ class ModelGAN(ABC):
         if params:
             self.set_parameters(params)
         self.set_architecture()
+        if "seq_length" in self.parameters:
+            self.set_data(self.data)
         losses, gradients, wass_dists = self.train(verbose=verbose)
         if verbose:
             self.plot_results(losses, gradients, wass_dists)

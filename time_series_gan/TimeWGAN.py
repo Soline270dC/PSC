@@ -6,7 +6,6 @@ class TimeWGAN(ModelGAN):
     def __init__(self):
         super().__init__()
         self.parameters = {"lr_g": 1e-5, "lr_c": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2, "lambda_gp": 0.1}
-
     def set_architecture(self):
         if self.data is None:
             raise Exception("Vous n'avez pas chargé de données. Voir set_data()")
@@ -22,8 +21,8 @@ class TimeWGAN(ModelGAN):
     def set_data(self, data):
         self.data = data
         self.output_dim = self.data.shape[1]
-        if self.parameters["seq_length"] <= 0 or len(data) % self.parameters["seq_length"] != 0:
-            raise Exception("La longueur des séquences (seq_length) doit être un diviseur de la taille des données. Modifier ce paramètre avec set_params()")
+        # if self.parameters["seq_length"] <= 0 or len(data) % self.parameters["seq_length"] != 0:
+            # raise Exception("La longueur des séquences (seq_length) doit être un diviseur de la taille des données. Modifier ce paramètre avec set_params()")
         sequences = []
         for i in range(len(data) - self.parameters["seq_length"]):
             sequences.append(data[i:i + self.parameters["seq_length"]])

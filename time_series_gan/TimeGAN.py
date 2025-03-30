@@ -22,8 +22,8 @@ class TimeGAN(ModelGAN):
     def set_data(self, data):
         self.data = data
         self.output_dim = self.data.shape[1]
-        if self.parameters["seq_length"] <= 0 or len(data) % self.parameters["seq_length"] != 0:
-            raise Exception("La longueur des séquences (seq_length) doit être un diviseur de la taille des données. Modifier ce paramètre avec set_params()")
+        # if self.parameters["seq_length"] <= 0 or len(data) % self.parameters["seq_length"] != 0:
+           # raise Exception("La longueur des séquences (seq_length) doit être un diviseur de la taille des données. Modifier ce paramètre avec set_params()")
         sequences = []
         for i in range(len(data) - self.parameters["seq_length"]):
             sequences.append(data[i:i + self.parameters["seq_length"]])
@@ -88,7 +88,7 @@ class TimeGAN(ModelGAN):
                     h_fake = self.generator(z)
                     real_score = self.discriminator(h_real.detach())
                     fake_score = self.discriminator(h_fake.detach())
-                    loss_d = -torch.mean(torch.log(real_score) + torch.log(1 - fake_score))
+                    loss_d = -torch.mean(torch.log(real_score + 1e-8) + torch.log(1 - fake_score + 1e-8))
                     optimizer_D.zero_grad()
                     loss_d.backward()
                     optimizer_D.step()
@@ -97,7 +97,7 @@ class TimeGAN(ModelGAN):
                 z_g = torch.randn(batch.size(dim=0), self.parameters["seq_length"], self.parameters["latent_dim"]).float()
                 h_fake_g = self.generator(z_g)
                 fake_score_g = self.discriminator(h_fake_g)
-                loss_g = -torch.mean(torch.log(fake_score_g))
+                loss_g = -torch.mean(torch.log(fake_score_g + 1e-8))
                 optimizer_G.zero_grad()
                 loss_g.backward()
                 optimizer_G.step()
