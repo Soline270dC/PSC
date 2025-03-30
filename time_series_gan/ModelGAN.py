@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from ot.sliced import sliced_wasserstein_distance
-from architectures import *
+from .architectures import *
 from abc import ABC, abstractmethod
 
 

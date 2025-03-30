@@ -1,4 +1,4 @@
-from ModelGAN import *
+from .ModelGAN import *
 
 
 class TimeWGAN(ModelGAN):
