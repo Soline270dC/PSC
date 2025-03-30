@@ -1,6 +1,6 @@
 from .ModelGAN import *
 
-
+# TODO : add function to check whether autoencoder works properly, check that reconstruction of data is good
 class TimeGAN(ModelGAN):
 
     def __init__(self):
@@ -19,6 +19,7 @@ class TimeGAN(ModelGAN):
         self.embedder.apply(self.weights_init)
         self.recovery.apply(self.weights_init)
 
+    # TODO : modify set_data with new method preprocess data for creating data sequences
     def set_data(self, data):
         self.data = data
         self.output_dim = self.data.shape[1]

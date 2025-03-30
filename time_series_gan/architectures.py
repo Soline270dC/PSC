@@ -10,7 +10,7 @@
 
 import torch.nn as nn
 
-
+# TODO : look for other architectures that might help -> Transformer for Generator and CNN for Critic ?
 class Generator(nn.Module):
     """
         Class implementing a generator used in all GAN models

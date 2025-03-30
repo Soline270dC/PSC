@@ -12,6 +12,9 @@ from .architectures import *
 from abc import ABC, abstractmethod
 
 
+# TODO : restructure the project with one subclass for TimeGAN and TimeWGAN for common methods and one subclass for GAN and WGAN
+# TODO : look for other GAN models for time series that might be implemented easily using current framework
+# TODO : introduce use of other evaluation metrics, check if there exists models optimising directly metrics measuring the time consistency of time series
 class ModelGAN(ABC):
 
     def __init__(self):
@@ -50,6 +53,9 @@ class ModelGAN(ABC):
         pass
 
     def fit(self, params=None, verbose=False):
+        # TODO : allow the user to choose which visualisations he or she wants to see
+        # TODO : allow computation of training time
+        # TODO : add visualisation to compare generated data trend and historical data trend
         """
         Sets the parameters values if needed
         Sets the architectures and initialize weights
