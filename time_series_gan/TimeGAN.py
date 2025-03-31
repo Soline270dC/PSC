@@ -1,57 +1,16 @@
-from .ModelGAN import *
+from .ModelTimeGAN import *
 
-# TODO : add function to check whether autoencoder works properly, check that reconstruction of data is good
-class TimeGAN(ModelGAN):
+
+class TimeGAN(ModelTimeGAN):
 
     def __init__(self):
         super().__init__()
         self.parameters = {"lr_g": 1e-5, "lr_d": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2}
 
     def set_architecture(self):
-        if self.data is None:
-            raise Exception("Vous n'avez pas chargé de données. Voir set_data()")
-        self.generator = Generator(self.parameters["latent_dim"], self.parameters["hidden_dim"])
+        super().set_architecture()
         self.discriminator = Discriminator(self.parameters["hidden_dim"])
-        self.embedder = Embedder(self.output_dim, self.parameters["hidden_dim"])
-        self.recovery = Recovery(self.parameters["hidden_dim"], self.output_dim)
-        self.generator.apply(self.weights_init)
         self.discriminator.apply(self.weights_init)
-        self.embedder.apply(self.weights_init)
-        self.recovery.apply(self.weights_init)
-
-    # TODO : modify set_data with new method preprocess data for creating data sequences
-    def set_data(self, data):
-        self.data = data
-        self.output_dim = self.data.shape[1]
-        # if self.parameters["seq_length"] <= 0 or len(data) % self.parameters["seq_length"] != 0:
-           # raise Exception("La longueur des séquences (seq_length) doit être un diviseur de la taille des données. Modifier ce paramètre avec set_params()")
-        sequences = []
-        for i in range(len(data) - self.parameters["seq_length"]):
-            sequences.append(data[i:i + self.parameters["seq_length"]])
-        sequences = torch.tensor(np.array(sequences), dtype=torch.float32)
-        train_size = int(len(sequences) * 0.8)
-        train_data, val_data = random_split(sequences, [train_size, len(sequences) - train_size])
-        self.train_loader = DataLoader(train_data, batch_size=self.parameters["batch_size"], shuffle=True)
-        self.val_loader = DataLoader(val_data, batch_size=self.parameters["batch_size"], shuffle=False)
-        self.colors = sns.color_palette(self.color_style, self.data.shape[1])
-
-    def generate_samples(self, n_samples):
-        if self.generator is None or self.recovery is None:
-            raise Exception("Vous n'avez pas encore initialisé le modèle. Voir fit()")
-        self.generator.eval()
-        self.embedder.eval()
-        self.recovery.eval()
-
-        n_sequences = n_samples // self.parameters["seq_length"]
-
-        with torch.no_grad():
-            # Generate the synthetic data
-            generated_data = self.generator(torch.randn(n_sequences + 1, self.parameters["seq_length"], self.parameters["latent_dim"]))
-
-            # Decode the generated data
-            decoded_data = self.recovery(generated_data).view(-1, self.output_dim)
-
-        return decoded_data.numpy()[:n_samples]
 
     def train(self, verbose=False):
         optimizer_E = optim.Adam(self.embedder.parameters(), lr=self.parameters["lr_e"])

@@ -8,33 +8,9 @@ class WGAN(ModelGAN):
         self.parameters = {"lr_g": 1e-5, "lr_c": 1e-5, "epochs": 100, "batch_size": 32, "latent_dim": 100, "n_critic": 2, "lambda_gp": 0.1}
 
     def set_architecture(self):
-        if self.data is None:
-            raise Exception("Vous n'avez pas chargé de données. Voir set_data()")
-        self.generator = Generator(self.parameters["latent_dim"], self.output_dim)
+        super().set_architecture()
         self.critic = Critic(self.output_dim)
-        self.generator.apply(self.weights_init)
         self.critic.apply(self.weights_init)
-
-    def set_data(self, data):
-        self.data = data
-        Y_tensor = torch.tensor(data.values)
-        dataset = TensorDataset(Y_tensor)
-        train_size = int((1 - 0.2) * len(dataset))
-        val_size = len(dataset) - train_size
-        train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-        self.train_loader = DataLoader(train_dataset, batch_size=self.parameters["batch_size"], shuffle=True)
-        self.val_loader = DataLoader(val_dataset, batch_size=self.parameters["batch_size"], shuffle=False)
-        self.output_dim = self.data.shape[1]
-        self.colors = sns.color_palette(self.color_style, self.data.shape[1])
-
-    def generate_samples(self, n_samples):
-        if self.generator is None:
-            raise Exception("Vous n'avez pas encore initialisé le modèle. Voir fit()")
-        self.generator.eval()
-        with torch.no_grad():
-            z = torch.randn(n_samples, self.parameters["latent_dim"])
-            generated_data = self.generator(z)
-        return generated_data.numpy()
 
     def gradient_penalty(self, real_samples, fake_samples):
         batch_size = real_samples.size(0)
