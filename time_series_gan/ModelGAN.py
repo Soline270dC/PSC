@@ -56,21 +56,22 @@ class ModelGAN(WrapperGAN):
             generated_data = self.generator(z)
         return generated_data.numpy()
 
+    @timeit
     def fit(self, params=None, verbose=False):
         if self.data is None:
             raise Exception("Vous n'avez pas fourni de données. Voir set_data()")
         if params:
             self.set_parameters(params)
         self.set_architecture()
-        losses, gradients, wass_dists = self.train(verbose=verbose)
+        losses, gradients, metrics = self.train(verbose=verbose)
         if verbose is True:
-            self.plot_results(losses, gradients, wass_dists)
+            self.plot_results(losses, gradients, metrics)
             self.plot_series()
             self.plot_compare_series()
             self.plot_histograms()
         if isinstance(verbose, list):
             if "results" in verbose:
-                self.plot_results(losses, gradients, wass_dists)
+                self.plot_results(losses, gradients, metrics)
             if "trend_series" in verbose:
                 self.plot_series()
             if "compare_series" in verbose:

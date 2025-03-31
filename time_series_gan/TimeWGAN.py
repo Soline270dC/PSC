@@ -5,7 +5,7 @@ class TimeWGAN(ModelTimeGAN):
 
     def __init__(self):
         super().__init__()
-        self.parameters = {"lr_g": 1e-5, "lr_c": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2, "lambda_gp": 0.1}
+        self.parameters = {"lr_g": 1e-5, "lr_c": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2, "lambda_gp": 0.1, "offset": 5}
 
     def set_architecture(self):
         super().set_architecture()
@@ -35,7 +35,7 @@ class TimeWGAN(ModelTimeGAN):
         optimizer_C = optim.Adam(self.critic.parameters(), lr=self.parameters["lr_c"], betas=(0.5, 0.999))
         loss_fn = nn.MSELoss()
 
-        wasserstein_distances = []
+        metrics = {metric: [] for metric in self.metrics}
         loss_g_list = []
         loss_c_list = []
         loss_ae_list = []
@@ -91,17 +91,20 @@ class TimeWGAN(ModelTimeGAN):
                     torch.stack([p.grad.abs().mean() for p in self.recovery.parameters() if p.grad is not None])).item())
 
                 # Compute Wasserstein distance on validation
-                wd = self.compute_val_wass_dist()
-                wasserstein_distances.append(wd)
+                for metric in self.metrics:
+                    m = self.compute_val_metric(self.metrics[metric]["function"], self.metrics[metric]["metric_args"])
+                    metrics[metric].append(m)
                 loss_g_list.append(loss_g.item())
                 loss_c_list.append(loss_c.item())
                 loss_ae_list.append(loss_ae.item())
 
                 print(
-                    f"Epoch [{epoch + 1}/{self.parameters["epochs"]}] Loss AE: {loss_ae.item():.4f}, Loss D: {loss_c.item():.4f}, Loss G: {loss_g.item():.4f}, WDist: {wd:.4f}")
+                    f"Epoch [{epoch + 1}/{self.parameters["epochs"]}] Loss AE: {loss_ae.item():.4f}, Loss D: {loss_c.item():.4f}, "
+                    f"Loss G: {loss_g.item():.4f}, " + ", ".join(
+                        [f"{metric.capitalize()}: {metrics[metric][-1]:.4f}" for metric in self.metrics]))
 
         losses = {"Critic Loss": loss_c_list, "Generator Loss": loss_g_list, "AutoEncoder Loss": loss_ae_list}
         gradients = {"Critic Gradient": grad_c_list, "Generator Gradient": grad_g_list,
                      "Embedder Gradient": grad_e_list, "Recovery Gradient": grad_r_list}
 
-        return losses, gradients, wasserstein_distances
+        return losses, gradients, metrics

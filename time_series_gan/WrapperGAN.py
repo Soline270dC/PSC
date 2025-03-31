@@ -15,9 +15,9 @@ from abc import ABC, abstractmethod
 
 def timeit(func):
     def wrapper(*args, **kwargs):
-        start_time = time.time()  # Start timer
+        start_time = time()  # Start timer
         result = func(*args, **kwargs)  # Execute function
-        end_time = time.time()  # End timer
+        end_time = time()  # End timer
         print(f"{func.__name__} took {end_time - start_time:.6f} seconds")
         return result  # Return function result
     return wrapper
@@ -50,17 +50,21 @@ class WrapperGAN(ABC):
         suppr = []
         remp = []
         if not isinstance(metrics, dict):
-            raise Exception("Les métriques doivent être données comme dictionnaire : {'metrics_name' : metrics_function}")
+            raise Exception("Les métriques doivent être données comme dictionnaire : {'metric_name' : {'function': metric_function, 'metric_args': metric_args}}")
         for metric in metrics:
-            if not callable(metrics[metric]):
+            if not isinstance(metrics[metric], dict) or not "function" in metrics[metric] or not "metric_args" in metrics[metric]:
+                raise Exception("Les métriques doivent être données comme dictionnaire : {'metric_name' : {'function': metric_function, 'metric_args': metric_args}}")
+            if not callable(metrics[metric]["function"]):
                 raise Exception("Les métriques doivent être des fonctions")
             if metric in self.metrics:
                 remp.append(metric)
         for metric in self.metrics:
             if metric not in metrics:
                 suppr.append(metric)
-        print(f"Les métriques {", ".join(suppr)} ont été supprimées.")
-        print(f"Les métriques {", ".join(remp)} ont été remplacées.")
+        if len(suppr) > 0:
+            print(f"Les métriques {", ".join(suppr)} ont été supprimées.")
+        if len(remp) > 0:
+            print(f"Les métriques {", ".join(remp)} ont été remplacées.")
         self.metrics = metrics
 
     @abstractmethod
@@ -75,7 +79,8 @@ class WrapperGAN(ABC):
     def get_val_data(self):
         pass
 
-    def weights_init(self, m):
+    @staticmethod
+    def weights_init(m):
         if isinstance(m, nn.Linear):
             # Initialisation He pour les couches ReLU
             nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
@@ -91,7 +96,6 @@ class WrapperGAN(ABC):
         pass
 
     @abstractmethod
-    @timeit
     def fit(self, params=None, verbose=False):
         """
         Sets the parameters values if needed
@@ -107,42 +111,27 @@ class WrapperGAN(ABC):
     def generate_samples(self, n_samples):
         pass
 
-    def compute_wass_dist(self, real_samples, n_samples):
-        # Generate synthetic data
-        synthetic_yields = self.generate_samples(n_samples)
+    def compute_metric(self, metric, metric_args, samples, n_samples):
+        generated_data = self.generate_samples(n_samples)
+        return metric(generated_data, samples, **metric_args)
 
-        # Ensure the shape matches for sliced Wasserstein calculation
-        real_samples = real_samples.numpy()
-        swd = sliced_wasserstein_distance(synthetic_yields, real_samples, n_projections=1000)
+    def compute_train_metric(self, metric, metric_args):
+        return self.compute_metric(metric, metric_args, self.train_data, len(self.train_data))
 
-        return swd
+    def compute_val_metric(self, metric, metric_args):
+        return self.compute_metric(metric, metric_args, self.val_data, len(self.val_data))
 
     def compute_train_wass_dist(self):
-        # Get the real samples from the training data
-        if self.train_loader is None:
+        if self.train_data is None:
             raise Exception("Vous n'avez pas initialisé de données. Voir set_data()")
-        real_train_samples = []
-        for real_tuples in self.train_loader:
-            real_train_samples.append(real_tuples[0])
-        real_train_samples = torch.cat(real_train_samples, dim=0)
-
-        # Compute Wasserstein distance for training data
-        return self.compute_wass_dist(real_train_samples, len(real_train_samples))
+        parameters = {"n_projections": 1000}
+        return self.compute_train_metric(sliced_wasserstein_distance, parameters)
 
     def compute_val_wass_dist(self):
-        # Récupérer les données réelles de validation
-        if self.train_loader is None:
+        if self.val_data is None:
             raise Exception("Vous n'avez pas initialisé de données. Voir set_data()")
-        real_val_samples = []
-        for real_tuples in self.val_loader:
-            real_val_samples.append(real_tuples[0])
-        real_val_samples = torch.cat(real_val_samples, dim=0)
-
-        # Calculer la distance de Wasserstein
-        return self.compute_wass_dist(real_val_samples, len(real_val_samples))
-
-    def compute_train_metric(self, metric):
-        pass
+        parameters = {"n_projections": 1000}
+        return self.compute_train_metric(sliced_wasserstein_distance, parameters)
 
     def plot_histograms(self):
         if self.data is None:
@@ -187,16 +176,18 @@ class WrapperGAN(ABC):
         synthetic_yields = self.generate_samples(len(self.data))
         sy = pd.DataFrame(synthetic_yields, columns=self.data.columns)
         for i, column in enumerate(self.data.columns):
+            plt.figure()
             plt.plot(self.data.index, self.data[column], color=self.colors[i], label=column)
             plt.plot(self.data.index, sy[column], color=self.colors[i], label=f"Generated {column}", alpha=0.6)
-        plt.title("Time Series Comparison : historical and forecasted")
-        plt.xlabel("Value")
-        plt.ylabel("Time")
-        plt.legend()
+            plt.title("Time Series Comparison : historical and forecasted")
+            plt.xlabel("Value")
+            plt.ylabel("Time")
+            plt.legend()
         plt.show()
 
-    def plot_results(self, losses, gradients, wass_dists):
-        fig, axes = plt.subplots(3, 1, figsize=(10, 10))
+    @staticmethod
+    def plot_results(losses, gradients, metrics):
+        fig, axes = plt.subplots(2 + len(metrics), 1, figsize=(10, 10))
         for loss in losses:
             axes[0].plot(losses[loss], label=loss)
         axes[0].set_title('Loss Evolution')
@@ -207,8 +198,8 @@ class WrapperGAN(ABC):
         axes[1].set_title('Gradient Norm Evolution')
         axes[1].legend()
 
-        axes[2].plot(wass_dists, label='Wasserstein Distance')
-        axes[2].set_title('Wasserstein Distance Evolution')
-        axes[2].legend()
-        plt.show()
-
+        for i, metric in enumerate(metrics):
+            axes[i+2].plot(metrics[metric], label=metric.capitalize())
+            axes[i+2].set_title(f'{metric.capitalize()} Evolution')
+            axes[i+2].legend()
+            plt.show()

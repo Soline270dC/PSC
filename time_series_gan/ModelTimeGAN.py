@@ -5,7 +5,6 @@ class ModelTimeGAN(WrapperGAN):
 
     def __init__(self):
         super().__init__()
-        self.parameters = {"lr_g": 1e-5, "lr_d": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2}
 
     def set_architecture(self):
         if self.data is None:
@@ -22,7 +21,7 @@ class ModelTimeGAN(WrapperGAN):
             raise Exception("Vous n'avez pas chargé de données. Voir set_data()")
 
         sequences = []
-        for i in range(len(self.data) - self.parameters["seq_length"]):
+        for i in range(0, len(self.data) - self.parameters["seq_length"], self.parameters["offset"]):
             sequences.append(self.data[i:i + self.parameters["seq_length"]])
         sequences = torch.tensor(np.array(sequences), dtype=torch.float32)
 
@@ -74,6 +73,7 @@ class ModelTimeGAN(WrapperGAN):
 
         return decoded_data.numpy()[:n_samples]
 
+    @timeit
     def fit(self, params=None, verbose=False):
         if self.data is None:
             raise Exception("Vous n'avez pas fourni de données. Voir set_data()")
@@ -82,16 +82,16 @@ class ModelTimeGAN(WrapperGAN):
             if "seq_length" in params:
                 self.preprocess_data()
         self.set_architecture()
-        losses, gradients, wass_dists = self.train(verbose=verbose)
+        losses, gradients, metrics = self.train(verbose=verbose)
         if verbose is True:
-            self.plot_results(losses, gradients, wass_dists)
+            self.plot_results(losses, gradients, metrics)
             self.evaluate_autoencoder()
             self.plot_series()
             self.plot_compare_series()
             self.plot_histograms()
         if isinstance(verbose, list):
             if "results" in verbose:
-                self.plot_results(losses, gradients, wass_dists)
+                self.plot_results(losses, gradients, metrics)
             if "autoencoder" in verbose:
                 self.evaluate_autoencoder()
             if "trend_series" in verbose:
@@ -129,8 +129,8 @@ class ModelTimeGAN(WrapperGAN):
     @staticmethod
     def plot_real_vs_reconstructed(real, recon):
         # Flatten the real and reconstructed data by taking the first sample from each batch
-        real = np.concatenate(real, axis=0)[:100]  # Take the first 100 samples (flattening batches)
-        recon = np.concatenate(recon, axis=0)[:100]  # Take the first 100 samples (flattening batches)
+        real = np.concatenate(real, axis=0)
+        recon = np.concatenate(recon, axis=0)
 
         # Ensure you're plotting the data correctly (assuming shape (time_steps, features))
         plt.figure(figsize=(12, 5))

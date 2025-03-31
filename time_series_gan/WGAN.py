@@ -34,7 +34,7 @@ class WGAN(ModelGAN):
 
         critic_losses, generator_losses = [], []
         critic_gradients, generator_gradients = [], []
-        wass_dists = []
+        metrics = {metric: [] for metric in self.metrics}
 
         for epoch in range(self.parameters["epochs"]):
             for i, (real_tuples,) in enumerate(self.train_loader):
@@ -78,12 +78,15 @@ class WGAN(ModelGAN):
                     sum(p.grad.norm().item() for p in self.generator.parameters() if p.grad is not None) / len(
                         list(self.generator.parameters())))
 
-                wass_dists.append(self.compute_val_wass_dist())
+                for metric in self.metrics:
+                    m = self.compute_val_metric(self.metrics[metric]["function"], self.metrics[metric]["metric_args"])
+                    metrics[metric].append(m)
 
                 print(
-                    f"Epoch [{epoch + 1}/{self.parameters["epochs"]}] C Loss: {critic_loss.item():.4f} G Loss: {generator_loss.item():.4f} | Wass Dist: {wass_dists[-1]:.4f}")
+                    f"Epoch [{epoch + 1}/{self.parameters["epochs"]}], C Loss: {critic_loss.item():.4f}, G Loss: {generator_loss.item():.4f}, " + ", ".join(
+                        [f"{metric.capitalize()}: {metrics[metric][-1]:.4f}" for metric in self.metrics]))
 
         losses = {"Critic Loss": critic_losses, "Generator Loss": generator_losses}
         gradients = {"Critic Gradient": critic_gradients, "Generator Gradient": generator_gradients}
 
-        return losses, gradients, wass_dists
+        return losses, gradients, metrics
