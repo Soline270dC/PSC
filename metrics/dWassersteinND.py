@@ -15,6 +15,7 @@ def project(x, u) :
     x_u = np.matmul(x, u)
     return x_u.T[0]
 
+np.random.uniform()
 def dWassersteinND(x, y, niter = 1000) :
     '''
     input
