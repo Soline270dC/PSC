@@ -1,6 +1,6 @@
 import numpy as np
 
-def DTW(P, Q, d) :
+def DTW(P, Q, d = lambda x, y : np.linalg.norm(x - y)) :
     """Dynamic Time Warping
     input
     -------

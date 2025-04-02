@@ -1,6 +1,6 @@
 import numpy as np
 
-def frechet_distance(P, Q, d) :
+def frechet_distance(P, Q, d = lambda x, y : np.linalg.norm(x - y)) :
     """Fréchet distance
     input
     -------
@@ -20,5 +20,5 @@ def frechet_distance(P, Q, d) :
     for i in range(1, p) :
         for j in range(1, q) :
             c[i, j] = max(d(P[i], Q[j]), min(c[i-1, j], c[i, j-1], c[i-1, j-1]))
-            
+
     return c[-1,-1]
