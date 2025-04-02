@@ -102,6 +102,7 @@ def Metropolis_Hasting(beta, data, ite = 10, analyse= False):
 
     resultats=[]
 
+
     for i in range(ite):
         print("MH étape : " +str(i))
         archi_test = archi_adj(archi)
