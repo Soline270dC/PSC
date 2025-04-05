@@ -5,12 +5,28 @@ class TimeGAN(ModelTimeGAN):
 
     def __init__(self):
         super().__init__()
+        self.discriminator = None
         self.parameters = {"lr_g": 1e-5, "lr_d": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2, "offset": 5}
 
     def set_architecture(self):
         super().set_architecture()
         self.discriminator = Discriminator(self.parameters["hidden_dim"])
         self.discriminator.apply(self.weights_init)
+
+    def modify_discriminator(self, architecture, layer_sizes, activation=None):
+        if self.discriminator is None:
+            raise Exception("Vous n'avez pas encore initialisé le critique")
+        self.modify_architecture(self.discriminator, architecture, layer_sizes, activation)
+
+    def modify_models(self, architectures):
+        super().modify_models(architectures)
+        if "discriminator" in architectures:
+            if self.discriminator is None:
+                raise Exception("Vous n'avez pas encore initialisé le discriminateur")
+            if not isinstance(architectures["discriminator"], dict) or "architecture" not in architectures["discriminator"] or "layer_sizes" not in architectures["discriminator"]:
+                raise Exception(
+                    "Vous pouvez modifier les architectures avec un dict de forme {'discriminator': {'architecture': 'MLP', 'layer_sizes': ...}, 'generator': {...}}")
+            self.modify_generator(architectures["discriminator"]["architecture"], architectures["discriminator"]["layer_sizes"])
 
     def train(self, verbose=False):
         optimizer_E = optim.Adam(self.embedder.parameters(), lr=self.parameters["lr_e"])

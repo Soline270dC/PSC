@@ -57,12 +57,14 @@ class ModelGAN(WrapperGAN):
         return generated_data.numpy()
 
     @timeit
-    def fit(self, params=None, verbose=False):
+    def fit(self, params=None, architectures=None, verbose=False):
         if self.data is None:
             raise Exception("Vous n'avez pas fourni de données. Voir set_data()")
         if params:
             self.set_parameters(params)
         self.set_architecture()
+        if architectures is not None:
+            self.modify_models(architectures)
         losses, gradients, metrics = self.train(verbose=verbose)
         if verbose is True:
             self.plot_results(losses, gradients, metrics)

@@ -5,12 +5,28 @@ class WGAN(ModelGAN):
 
     def __init__(self):
         super().__init__()
+        self.critic = None
         self.parameters = {"lr_g": 1e-5, "lr_c": 1e-5, "epochs": 100, "batch_size": 32, "latent_dim": 100, "n_critic": 2, "lambda_gp": 0.1}
 
     def set_architecture(self):
         super().set_architecture()
         self.critic = Critic(self.output_dim)
         self.critic.apply(self.weights_init)
+
+    def modify_critic(self, architecture, layer_sizes, activation=None):
+        if self.critic is None:
+            raise Exception("Vous n'avez pas encore initialisé le critique")
+        self.modify_architecture(self.critic, architecture, layer_sizes, activation)
+
+    def modify_models(self, architectures):
+        super().modify_models(architectures)
+        if "critic" in architectures:
+            if self.critic is None:
+                raise Exception("Vous n'avez pas encore initialisé le critique")
+            if not isinstance(architectures["critic"], dict) or "architecture" not in architectures["critic"] or "layer_sizes" not in architectures["critic"]:
+                raise Exception(
+                    "Vous pouvez modifier les architectures avec un dict de forme {'critic': {'architecture': 'MLP', 'layer_sizes': ...}, 'generator': {...}}")
+            self.modify_generator(architectures["critic"]["architecture"], architectures["critic"]["layer_sizes"])
 
     def gradient_penalty(self, real_samples, fake_samples):
         batch_size = real_samples.size(0)

@@ -9,9 +9,10 @@
 """
 
 import torch.nn as nn
+from .WrapperArchi import Architecture
 
-# TODO : look for other architectures that might help -> Transformer for Generator and CNN for Critic ?
-class Generator(nn.Module):
+
+class Generator(Architecture):
     """
         Class implementing a generator used in all GAN models
         Input: random vector of noise from latent space of size latent_dim
@@ -19,25 +20,10 @@ class Generator(nn.Module):
     """
 
     def __init__(self, latent_dim, output_dim):
-        super(Generator, self).__init__()
-        self.model = nn.Sequential(
-            nn.Linear(latent_dim, 256),
-            nn.LeakyReLU(0.2, inplace=True),
-
-            nn.Linear(256, 128),
-            nn.LeakyReLU(0.2, inplace=True),
-
-            nn.Linear(128, 64),
-            nn.LeakyReLU(0.2, inplace=True),
-
-            nn.Linear(64, output_dim)
-        )
-
-    def forward(self, x):
-        return self.model(x)
+        super().__init__(latent_dim, output_dim, sigmoid=False, architecture="MLP", layer_sizes=[512, 256, 128, 64, output_dim])
 
 
-class Discriminator(nn.Module):
+class Discriminator(Architecture):
     """
         Class implementing a discriminator used in GAN and TimeGAN. Note this class should not be used in any kind of
         Wasserstein GAN, see Critic instead.
@@ -46,24 +32,10 @@ class Discriminator(nn.Module):
     """
 
     def __init__(self, input_dim):
-        super(Discriminator, self).__init__()
-        self.model = nn.Sequential(
-            nn.Linear(input_dim, 128),
-            nn.LeakyReLU(0.2, inplace=True),
-
-            nn.Linear(128, 64),
-            nn.LeakyReLU(0.2, inplace=True),
-
-            nn.Linear(64, 1),
-            # Warning : must end with an activation function, usually Sigmoid works well
-            nn.Sigmoid()
-        )
-
-    def forward(self, x):
-        return self.model(x)
+        super().__init__(input_dim, 1, sigmoid=True, architecture="MLP")
 
 
-class Critic(nn.Module):
+class Critic(Architecture):
     """
         Class implementing a critic used in WGAN and TimeWGAN. Note this class should not be used in non-Wasserstein
         GANs, see Discriminator instead.
@@ -72,23 +44,7 @@ class Critic(nn.Module):
     """
 
     def __init__(self, input_dim):
-        super(Critic, self).__init__()
-        self.model = nn.Sequential(
-            nn.Linear(input_dim, 256),
-            nn.LeakyReLU(0.2, inplace=True),
-
-            nn.Linear(256, 128),
-            nn.LeakyReLU(0.2, inplace=True),
-
-            nn.Linear(128, 64),
-            nn.LeakyReLU(0.2, inplace=True),
-
-            nn.Linear(64, 1)
-            # Warning : cannot end with an activation function !!
-        )
-
-    def forward(self, x):
-        return self.model(x)
+        super().__init__(input_dim, 1, sigmoid=False, architecture="MLP")
 
 
 class Embedder(nn.Module):

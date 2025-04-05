@@ -24,7 +24,8 @@ def timeit(func):
 
 
 # TODO : look for other GAN models for time series that might be implemented easily using current framework
-# TODO : introduce use of other evaluation metrics, check if there exists models optimising directly metrics measuring the time consistency of time series
+# TODO : check if there exists models optimising directly metrics measuring the time consistency of time series
+# TODO : tests with synthetic data -> just noise, a straight line, straight line + noise... etc.
 class WrapperGAN(ABC):
 
     def __init__(self):
@@ -36,6 +37,7 @@ class WrapperGAN(ABC):
         self.train_loader = None
         self.val_loader = None
         self.output_dim = None
+        self.generator = None
         self.parameters = {}
         self.metrics = {}
 
@@ -90,6 +92,27 @@ class WrapperGAN(ABC):
     @abstractmethod
     def set_architecture(self):
         pass
+
+    def modify_architecture(self, model, architecture, layer_sizes, activation=None):
+        if not isinstance(model, Architecture):
+            raise Exception("Vous ne pouvez pas modifier ce modèle")
+        model.modify_architecture(architecture=architecture, layer_sizes=layer_sizes, activation=activation)
+
+    def modify_generator(self, architecture, layer_sizes, activation=None):
+        if self.generator is None:
+            raise Exception("Vous n'avez pas encore initialisé le générateur")
+        self.modify_architecture(self.generator, architecture, layer_sizes, activation)
+
+    def modify_models(self, architectures):
+        if not isinstance(architectures, dict):
+            raise Exception("Vous pouvez modifier les architectures avec un dict de forme {'discriminator': {'architecture': 'MLP', 'layer_sizes': ...}, 'generator': {...}}")
+        if "generator" in architectures:
+            if self.generator is None:
+                raise Exception("Vous n'avez pas encore initialisé le générateur")
+            if not isinstance(architectures["generator"], dict) or "architecture" not in architectures["generator"] or "layer_sizes" not in architectures["generator"]:
+                raise Exception(
+                    "Vous pouvez modifier les architectures avec un dict de forme {'discriminator': {'architecture': 'MLP', 'layer_sizes': ...}, 'generator': {...}}")
+            self.modify_generator(architectures["generator"]["architecture"], architectures["generator"]["layer_sizes"])
 
     @abstractmethod
     def train(self, verbose=False):
