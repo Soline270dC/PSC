@@ -102,42 +102,30 @@ class ModelTimeGAN(WrapperGAN):
                 self.plot_compare_series()
             if "histograms" in verbose:
                 self.plot_histograms()
-        return self.compute_train_wass_dist(), self.compute_val_wass_dist()
+        return {metric: (self.compute_train_metric(self.metrics[metric]["function"], self.metrics[metric]["metric_args"]),
+                         self.compute_val_metric(self.metrics[metric]["function"], self.metrics[metric]["metric_args"]))
+                for metric in self.metrics}
 
     def evaluate_autoencoder(self):
         loss_fn = nn.MSELoss()
-        losses = []
-        real_samples = []
-        recon_samples = []
+        torch_val_data = torch.from_numpy(self.val_data)
+        x_recon = self.recovery(self.embedder(torch_val_data))
+        loss = loss_fn(torch_val_data, x_recon)
 
-        with torch.no_grad():
-            for batch in self.val_loader:
-                real_data = batch
-                h = self.embedder(real_data)  # Encode real data
-                x_recon = self.recovery(h)  # Decode it back
-
-                loss = loss_fn(real_data, x_recon)  # Compute reconstruction loss
-                losses.append(loss.item())
-
-                real_samples.append(real_data.cpu().numpy())  # Collect real data
-                recon_samples.append(x_recon.cpu().numpy())  # Collect reconstructed data
-
-        avg_loss = sum(losses) / len(losses)
-        print(f"Autoencoder Reconstruction Loss: {avg_loss:.4f}")
+        print(f"Autoencoder Reconstruction Loss: {loss.item():.4f}")
 
         # Plot real vs reconstructed samples for visual inspection
-        self.plot_real_vs_reconstructed(real_samples, recon_samples)
+        self.plot_real_vs_reconstructed(torch_val_data.detach().numpy(), x_recon.detach().numpy())
 
     @staticmethod
     def plot_real_vs_reconstructed(real, recon):
-        # Flatten the real and reconstructed data by taking the first sample from each batch
         real = np.concatenate(real, axis=0)
         recon = np.concatenate(recon, axis=0)
 
         # Ensure you're plotting the data correctly (assuming shape (time_steps, features))
         plt.figure(figsize=(12, 5))
-        plt.plot(real[:, 0], label="Real Data (1st Feature)", alpha=0.7)  # Plot the first feature
-        plt.plot(recon[:, 0], label="Reconstructed Data (1st Feature)", linestyle="dashed")  # Plot the first feature
+        plt.plot(real, label="Real Data (1st Feature)", alpha=0.7)  # Plot the first feature
+        plt.plot(recon, label="Reconstructed Data (1st Feature)", linestyle="dashed")  # Plot the first feature
         plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
         plt.title("Autoencoder: Real vs Reconstructed")
         plt.show()

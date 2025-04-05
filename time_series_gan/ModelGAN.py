@@ -80,4 +80,6 @@ class ModelGAN(WrapperGAN):
                 self.plot_compare_series()
             if "histograms" in verbose:
                 self.plot_histograms()
-        return self.compute_train_wass_dist(), self.compute_val_wass_dist()
+        return {metric: (self.compute_train_metric(self.metrics[metric]["function"], self.metrics[metric]["metric_args"]),
+                         self.compute_val_metric(self.metrics[metric]["function"], self.metrics[metric]["metric_args"]))
+                for metric in self.metrics}
