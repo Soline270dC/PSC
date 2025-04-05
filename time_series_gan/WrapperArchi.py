@@ -70,7 +70,7 @@ class Architecture(nn.Module):
     def _build_cnn(self, input_channels, layer_sizes):
         layers = []
         prev_channels = input_channels
-        for out_channels in layer_sizes:
+        for out_channels in layer_sizes[:-1]:
             layers.append(nn.Conv1d(prev_channels, out_channels, kernel_size=3, stride=1, padding=1))
             layers.append(nn.BatchNorm1d(out_channels))
             layers.append(nn.ReLU())
@@ -89,7 +89,7 @@ class Architecture(nn.Module):
         layers = []
         prev_channels = input_dim
         dilation = 1
-        for out_channels in layer_sizes:
+        for out_channels in layer_sizes[:-1]:
             layers.append(nn.Conv1d(prev_channels, out_channels, kernel_size=3, dilation=dilation, padding=dilation))
             layers.append(nn.BatchNorm1d(out_channels))
             layers.append(nn.ReLU())

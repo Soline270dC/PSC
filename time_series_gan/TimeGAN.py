@@ -26,7 +26,7 @@ class TimeGAN(ModelTimeGAN):
             if not isinstance(architectures["discriminator"], dict) or "architecture" not in architectures["discriminator"] or "layer_sizes" not in architectures["discriminator"]:
                 raise Exception(
                     "Vous pouvez modifier les architectures avec un dict de forme {'discriminator': {'architecture': 'MLP', 'layer_sizes': ...}, 'generator': {...}}")
-            self.modify_generator(architectures["discriminator"]["architecture"], architectures["discriminator"]["layer_sizes"])
+            self.modify_discriminator(architectures["discriminator"]["architecture"], architectures["discriminator"]["layer_sizes"])
 
     def train(self, verbose=False):
         optimizer_E = optim.Adam(self.embedder.parameters(), lr=self.parameters["lr_e"])

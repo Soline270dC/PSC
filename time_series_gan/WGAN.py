@@ -26,7 +26,7 @@ class WGAN(ModelGAN):
             if not isinstance(architectures["critic"], dict) or "architecture" not in architectures["critic"] or "layer_sizes" not in architectures["critic"]:
                 raise Exception(
                     "Vous pouvez modifier les architectures avec un dict de forme {'critic': {'architecture': 'MLP', 'layer_sizes': ...}, 'generator': {...}}")
-            self.modify_generator(architectures["critic"]["architecture"], architectures["critic"]["layer_sizes"])
+            self.modify_critic(architectures["critic"]["architecture"], architectures["critic"]["layer_sizes"])
 
     def gradient_penalty(self, real_samples, fake_samples):
         batch_size = real_samples.size(0)
