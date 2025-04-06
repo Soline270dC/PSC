@@ -3,8 +3,8 @@ import torch.nn.parallel
 import torch.utils.data
 import numpy as np
 from matplotlib import ticker
-from grid_search.usefulFunctions2 import *
-from grid_search.usefulFunctions import getData
+from grid_search.functions.usefulFunctions2 import *
+from grid_search.functions.usefulFunctions import getData
 import matplotlib.pyplot as plt
 from time import time
 

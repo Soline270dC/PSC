@@ -3,9 +3,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from grid_search.constructArchitecture import evalArchitecture
+from grid_search.functions.constructArchitecture import evalArchitecture
 from itertools import product
-from DWasserstein4D import dWasserstein4D
+from grid_search.functions.DWasserstein4D import dWasserstein4D
 
 def getData(dataroot, batch_size) :
     class Dataset():

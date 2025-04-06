@@ -3,11 +3,11 @@ import torch.nn.parallel
 import torch.utils.data
 import torch.nn as nn
 import numpy as np
-from grid_search.usefulFunctions3 import getData3
-from grid_search.usefulFunctions2 import initGenDis2, train2 
-from grid_search.usefulFunctions import getData
+from grid_search.functions.usefulFunctions3 import getData3
+from grid_search.functions.usefulFunctions2 import initGenDis2, train2 
+from grid_search.functions.usefulFunctions import getData
 from bayes_opt import BayesianOptimization
-from fElliot import test_architecture, Architecture
+from GANs.fElliot import test_architecture, Architecture
 
 def function_to_optimize(batch_size, latent_dim, num_epochs, lr) :
     latent_dim = int(latent_dim)

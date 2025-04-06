@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 import numpy as np
-from grid_search.usefulFunctions import getGrid
+from grid_search.functions.usefulFunctions import getGrid
 
 name = "result3b"
 testing = [[2, 3], [30, 40, 50], [5], [30, 50]]

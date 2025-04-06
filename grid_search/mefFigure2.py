@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 import numpy as np
-from grid_search.usefulFunctions2 import getGrid2
+from grid_search.functions.usefulFunctions2 import getGrid2
 
 name = "result2nd-2"
 savename = "lr-beta1_2"

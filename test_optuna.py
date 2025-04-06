@@ -1,6 +1,6 @@
 import optuna
 import torch.nn as nn
-from fElliot import test_architecture, Architecture
+from GANs.fElliot import test_architecture, Architecture
 
 
 def f_Elliot(trial) :

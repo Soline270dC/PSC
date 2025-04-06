@@ -2,7 +2,7 @@ import torch
 import torch.nn.parallel
 import torch.utils.data
 import numpy as np
-from grid_search.usefulFunctions import *
+from grid_search.functions.usefulFunctions import *
 import matplotlib.pyplot as plt
 from time import time
 from matplotlib import ticker

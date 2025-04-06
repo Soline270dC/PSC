@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from DWasserstein4D import dWasserstein4D
+from grid_search.functions.DWasserstein4D import dWasserstein4D
 import torch.nn as nn
 
 def evalArchitecture2(nz) :
