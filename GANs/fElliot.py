@@ -239,3 +239,16 @@ def test_architecture(batch_size, latent_dim, num_epochs, lr, archi = archi, nb_
     return s / nb_ite
 
 # print(test_architecture(batch_size, latent_dim, num_epochs, 0.0008, archi))
+nb_points=10000
+latent_dim = 40
+num_epochs = 184
+batch_size = 11
+lr = 0.0000996122723193804
+dataloader, all_data_np = getDalatoader(batch_size)
+generator, discriminator = Generator(archi, latent_dim) , Discriminator(archi)
+generator, discriminator = entrainement(generator, discriminator, num_epochs, lr, dataloader, latent_dim, batch_size)
+z = torch.randn(nb_points, latent_dim)
+fake_data = generator(z)
+fake_data_np = fake_data.detach().numpy()
+np.savetxt("generated_data/data_Elliot.csv", fake_data_np, delimiter = ",")
+print(Wassertstein_esti(all_data_np, fake_data_np))
