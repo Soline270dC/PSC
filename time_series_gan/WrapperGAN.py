@@ -73,14 +73,6 @@ class WrapperGAN(ABC):
     def set_data(self, data):
         pass
 
-    @abstractmethod
-    def get_train_data(self):
-        pass
-
-    @abstractmethod
-    def get_val_data(self):
-        pass
-
     @staticmethod
     def weights_init(m):
         if isinstance(m, nn.Linear):
@@ -93,7 +85,8 @@ class WrapperGAN(ABC):
     def set_architecture(self):
         pass
 
-    def modify_architecture(self, model, architecture, layer_sizes, activation=None):
+    @staticmethod
+    def modify_architecture(model, architecture, layer_sizes, activation=None):
         if not isinstance(model, Architecture):
             raise Exception("Vous ne pouvez pas modifier ce modèle")
         model.modify_architecture(architecture=architecture, layer_sizes=layer_sizes, activation=activation)
@@ -214,7 +207,7 @@ class WrapperGAN(ABC):
 
     @staticmethod
     def plot_results(losses, gradients, metrics):
-        fig, axes = plt.subplots(2 + len(metrics), 1, figsize=(10, 10))
+        fig, axes = plt.subplots(2 + len(metrics))
         for loss in losses:
             axes[0].plot(losses[loss], label=loss)
         axes[0].set_title('Loss Evolution')

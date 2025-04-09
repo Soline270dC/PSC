@@ -1,4 +1,5 @@
 from .WrapperGAN import *
+from sklearn.model_selection import train_test_split
 
 
 class ModelTimeGAN(WrapperGAN):
@@ -10,8 +11,8 @@ class ModelTimeGAN(WrapperGAN):
         if self.data is None:
             raise Exception("Vous n'avez pas chargé de données. Voir set_data()")
         self.generator = Generator(self.parameters["latent_dim"], self.parameters["hidden_dim"])
-        self.embedder = Embedder(self.output_dim, self.parameters["hidden_dim"])
-        self.recovery = Recovery(self.parameters["hidden_dim"], self.output_dim)
+        self.embedder = Embedder(self.output_dim, self.parameters["seq_length"], self.parameters["hidden_dim"])
+        self.recovery = Recovery(self.parameters["hidden_dim"], self.parameters["seq_length"], self.output_dim)
         self.generator.apply(self.weights_init)
         self.embedder.apply(self.weights_init)
         self.recovery.apply(self.weights_init)
@@ -21,40 +22,25 @@ class ModelTimeGAN(WrapperGAN):
             raise Exception("Vous n'avez pas chargé de données. Voir set_data()")
 
         sequences = []
-        for i in range(0, len(self.data) - self.parameters["seq_length"], self.parameters["offset"]):
-            sequences.append(self.data[i:i + self.parameters["seq_length"]])
-        sequences = torch.tensor(np.array(sequences), dtype=torch.float32)
+        for i in range(0, len(self.data) - self.parameters["seq_length"]):
+            sequences.append(np.array(self.data[i:i + self.parameters["seq_length"]]))
+        sequences = np.array(sequences)
+        train_data, val_data = train_test_split(sequences, test_size=0.2, shuffle=True, random_state=42)
 
-        train_size = int(len(sequences) * 0.8)
-        train_data, val_data = random_split(sequences, [train_size, len(sequences) - train_size])
+        self.train_data = train_data.reshape(-1, self.output_dim)
+        self.val_data = val_data.reshape(-1, self.output_dim)
 
-        self.train_loader = DataLoader(train_data, batch_size=self.parameters["batch_size"], shuffle=True)
-        self.val_loader = DataLoader(val_data, batch_size=self.parameters["batch_size"], shuffle=False)
+        train_data = torch.tensor(train_data, dtype=torch.float32)
+        val_data = torch.tensor(val_data, dtype=torch.float32)
 
-        self.get_train_data()
-        self.get_val_data()
+        self.train_loader = DataLoader(TensorDataset(train_data), batch_size=self.parameters["batch_size"], shuffle=True, drop_last=True)
+        self.val_loader = DataLoader(TensorDataset(val_data), batch_size=self.parameters["batch_size"], shuffle=False, drop_last=True)
 
     def set_data(self, data):
         self.data = data
         self.output_dim = self.data.shape[1]
         self.colors = sns.color_palette(self.color_style, self.data.shape[1])
         self.preprocess_data()
-
-    def get_train_data(self):
-        if self.train_loader is None:
-            raise Exception("Vous n'avez pas initialisé de données. Voir set_data()")
-        real_train_samples = []
-        for real_tuples in self.train_loader:
-            real_train_samples.extend([real_tuples[i] for i in range(len(real_tuples))])
-        self.train_data = torch.cat(real_train_samples, dim=0).numpy()
-
-    def get_val_data(self):
-        if self.val_loader is None:
-            raise Exception("Vous n'avez pas initialisé de données. Voir set_data()")
-        real_train_samples = []
-        for real_tuples in self.val_loader:
-            real_train_samples.extend([real_tuples[i] for i in range(len(real_tuples))])
-        self.val_data = torch.cat(real_train_samples, dim=0).numpy()
 
     def generate_samples(self, n_samples):
         if self.generator is None or self.recovery is None:
@@ -66,12 +52,12 @@ class ModelTimeGAN(WrapperGAN):
 
         with torch.no_grad():
             # Generate the synthetic data
-            generated_data = self.generator(torch.randn(n_sequences + 1, self.parameters["seq_length"], self.parameters["latent_dim"]))
+            generated_data = self.generator(torch.randn(n_sequences + 1, self.parameters["latent_dim"]))
 
             # Decode the generated data
-            decoded_data = self.recovery(generated_data).view(-1, self.output_dim)
+            decoded_data = self.recovery(generated_data)
 
-        return decoded_data.numpy()[:n_samples]
+        return decoded_data.numpy().reshape(-1, self.output_dim)[:n_samples]
 
     @timeit
     def fit(self, params=None, architectures=None, verbose=False):

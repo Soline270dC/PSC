@@ -14,6 +14,7 @@ class Architecture(nn.Module):
         self.activation = activation
         self.sigmoid = sigmoid
         self.input_dim = input_dim
+        self.output_dim = output_dim
 
         # Default architecture if none is provided
         if layer_sizes is None:
@@ -29,11 +30,11 @@ class Architecture(nn.Module):
         if self.architecture == "MLP":
             self.model = self._build_mlp(self.input_dim, layer_sizes)
         elif self.architecture == "RNN":
-            self.model = self._build_rnn(self.input_dim, layer_sizes[0], len(layer_sizes)-1)
+            self.model = self._build_rnn(self.input_dim, self.output_dim, len(layer_sizes)-1)
         elif self.architecture == "LSTM":
-            self.model = self._build_lstm(self.input_dim, layer_sizes[0], len(layer_sizes)-1)
+            self.model = self._build_lstm(self.input_dim, self.output_dim, len(layer_sizes)-1)
         elif self.architecture == "GRU":
-            self.model = self._build_gru(self.input_dim, layer_sizes[0], len(layer_sizes)-1)
+            self.model = self._build_gru(self.input_dim, self.output_dim, len(layer_sizes)-1)
         elif self.architecture == "CNN":
             self.model = self._build_cnn(self.input_dim, layer_sizes)
         elif self.architecture == "Transformer":
@@ -44,6 +45,8 @@ class Architecture(nn.Module):
             raise ValueError(f"Unsupported architecture: {self.architecture}")
 
     def _build_mlp(self, input_dim, layer_sizes):
+        if layer_sizes[-1] != self.output_dim:
+            raise Exception(f"La dernière couche doit avoir la dimension de sortie {self.output_dim}")
         layers = []
         prev_dim = input_dim
         for size in layer_sizes[:-1]:
@@ -109,11 +112,13 @@ class Architecture(nn.Module):
 
     def forward(self, x):
         if self.architecture in ["RNN", "LSTM", "GRU"]:
-            _, hidden = self.model(x)
+            if x.dim() < 3:
+                x = torch.reshape(x, (x.shape[0], 1, self.input_dim))
+            out, hidden = self.model(x)
+            out = out[:, -1, :]
             if self.sigmoid:
-                return torch.sigmoid(hidden[0] if isinstance(hidden, tuple) else hidden)
-            else:
-                return hidden[0] if isinstance(hidden, tuple) else hidden
+                return torch.sigmoid(out)
+            return out
         elif self.architecture == "Transformer":
             if self.sigmoid:
                 return torch.sigmoid(self.model(x))

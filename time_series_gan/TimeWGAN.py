@@ -6,7 +6,7 @@ class TimeWGAN(ModelTimeGAN):
     def __init__(self):
         super().__init__()
         self.critic = None
-        self.parameters = {"lr_g": 1e-5, "lr_c": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2, "lambda_gp": 0.1, "offset": 5}
+        self.parameters = {"lr_g": 1e-5, "lr_c": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2, "lambda_gp": 0.1}
 
     def set_architecture(self):
         super().set_architecture()
@@ -30,7 +30,7 @@ class TimeWGAN(ModelTimeGAN):
 
     def gradient_penalty(self, real_samples, fake_samples):
         batch_size = real_samples.size(0)
-        alpha = torch.rand(batch_size, 1, 1).expand_as(real_samples).float()
+        alpha = torch.rand(batch_size, 1).expand_as(real_samples).float()
         interpolates = (alpha * real_samples + (1 - alpha) * fake_samples).requires_grad_(True)
         critic_interpolates = self.critic(interpolates)
         gradients = autograd.grad(
@@ -61,8 +61,8 @@ class TimeWGAN(ModelTimeGAN):
         grad_r_list = []
 
         for epoch in range(self.parameters["epochs"]):
-            for i, batch in enumerate(self.train_loader):
-                real_data = batch.float()
+            for i, (batch, ) in enumerate(self.train_loader):
+                real_data = batch
 
                 # Pre-training Embedder/Recovery
                 h_real = self.embedder(real_data)
@@ -76,7 +76,7 @@ class TimeWGAN(ModelTimeGAN):
 
                 for _ in range(self.parameters["n_critic"]):
                     # Training Critic
-                    z = torch.randn(batch.size(dim=0), self.parameters["seq_length"], self.parameters["latent_dim"]).float()
+                    z = torch.randn(self.parameters["batch_size"], self.parameters["latent_dim"]).float()
                     h_fake = self.generator(z)
                     real_score = self.critic(h_real.detach())
                     fake_score = self.critic(h_fake.detach())

@@ -6,7 +6,7 @@ class TimeGAN(ModelTimeGAN):
     def __init__(self):
         super().__init__()
         self.discriminator = None
-        self.parameters = {"lr_g": 1e-5, "lr_d": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2, "offset": 5}
+        self.parameters = {"lr_g": 1e-5, "lr_d": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2}
 
     def set_architecture(self):
         super().set_architecture()
@@ -60,7 +60,7 @@ class TimeGAN(ModelTimeGAN):
 
                 for _ in range(self.parameters["n_critic"]):
                     # Training Critic
-                    z = torch.randn(batch.size(dim=0), self.parameters["seq_length"], self.parameters["latent_dim"]).float()
+                    z = torch.randn(batch.size(dim=0), self.parameters["latent_dim"]).float()
                     h_fake = self.generator(z)
                     real_score = self.discriminator(h_real.detach())
                     fake_score = self.discriminator(h_fake.detach())

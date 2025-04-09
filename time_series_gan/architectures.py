@@ -56,10 +56,12 @@ class Embedder(nn.Module):
         Output: vector in hidden space
     """
 
-    def __init__(self, input_dim, hidden_dim):
+    def __init__(self, input_dim, seq_length, hidden_dim):
         super(Embedder, self).__init__()
+        self.seq_length = seq_length
+        self.input_dim = input_dim
         self.model = nn.Sequential(
-            nn.Linear(input_dim, 256),
+            nn.Linear(input_dim*seq_length, 256),
             nn.ReLU(),
             nn.Linear(256, 128),
             nn.ReLU(),
@@ -67,6 +69,7 @@ class Embedder(nn.Module):
         )
 
     def forward(self, x):
+        x = x.reshape(-1, self.input_dim*self.seq_length)
         return self.model(x)
 
 
@@ -78,15 +81,18 @@ class Recovery(nn.Module):
         Output: vector in data space (ie. working space)
     """
 
-    def __init__(self, hidden_dim, output_dim):
+    def __init__(self, hidden_dim, seq_length, output_dim):
         super(Recovery, self).__init__()
+        self.seq_length = seq_length
+        self.output_dim = output_dim
         self.model = nn.Sequential(
             nn.Linear(hidden_dim, 256),
             nn.ReLU(),
             nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Linear(128, output_dim)
+            nn.Linear(128, seq_length*output_dim)
         )
 
     def forward(self, h):
-        return self.model(h)
+        ret = self.model(h).reshape(-1, self.seq_length, self.output_dim)
+        return ret
