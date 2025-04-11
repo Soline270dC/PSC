@@ -60,7 +60,7 @@ class ModelTimeGAN(WrapperGAN):
         return decoded_data.numpy().reshape(-1, self.output_dim)[:n_samples]
 
     @timeit
-    def fit(self, params=None, architectures=None, verbose=False):
+    def fit(self, params=None, architectures=None, verbose=False, save=False):
         if self.data is None:
             raise Exception("Vous n'avez pas fourni de données. Voir set_data()")
         if params:
@@ -72,22 +72,22 @@ class ModelTimeGAN(WrapperGAN):
             self.modify_models(architectures)
         losses, gradients, metrics = self.train(verbose=verbose)
         if verbose is True:
-            self.plot_results(losses, gradients, metrics)
+            self.plot_results(losses, gradients, metrics, save=save)
             self.evaluate_autoencoder()
-            self.plot_series()
-            self.plot_compare_series()
-            self.plot_histograms()
+            self.plot_series(save=save)
+            self.plot_compare_series(save=save)
+            self.plot_histograms(save=save)
         if isinstance(verbose, list):
             if "results" in verbose:
-                self.plot_results(losses, gradients, metrics)
+                self.plot_results(losses, gradients, metrics, save=save)
             if "autoencoder" in verbose:
                 self.evaluate_autoencoder()
             if "trend_series" in verbose:
-                self.plot_series()
+                self.plot_series(save=save)
             if "compare_series" in verbose:
-                self.plot_compare_series()
+                self.plot_compare_series(save=save)
             if "histograms" in verbose:
-                self.plot_histograms()
+                self.plot_histograms(save=save)
         return {metric: (self.compute_train_metric(self.metrics[metric]["function"], self.metrics[metric]["metric_args"]),
                          self.compute_val_metric(self.metrics[metric]["function"], self.metrics[metric]["metric_args"]))
                 for metric in self.metrics}

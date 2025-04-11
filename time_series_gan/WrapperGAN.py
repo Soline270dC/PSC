@@ -157,7 +157,7 @@ class WrapperGAN(ABC):
         parameters = {"n_projections": 1000}
         return self.compute_train_metric(sliced_wasserstein_distance, parameters)
 
-    def plot_histograms(self):
+    def plot_histograms(self, save=False):
         if self.data is None:
             raise Exception("Vous n'avez pas initialisé de données. Voir set_data()")
         generated_data = self.generate_samples(len(self.data))
@@ -176,9 +176,11 @@ class WrapperGAN(ABC):
             plt.xlabel('Value')
             plt.ylabel('Density')
             plt.legend()
+            if save:
+                plt.savefig(f"distribution_comparison_{col}.png")
             plt.show()
 
-    def plot_series(self):
+    def plot_series(self, save=False):
         if self.data is None:
             raise Exception("Vous n'avez pas initialisé de données. Voir set_data()")
         synthetic_yields = self.generate_samples(len(self.data))
@@ -192,9 +194,11 @@ class WrapperGAN(ABC):
         plt.xlabel("Value")
         plt.ylabel("Time")
         plt.legend()
+        if save:
+            plt.savefig("ts_generated_trend_vis.png")
         plt.show()
 
-    def plot_compare_series(self):
+    def plot_compare_series(self, save=False):
         if self.data is None:
             raise Exception("Vous n'avez pas initialisé de données. Voir set_data()")
         synthetic_yields = self.generate_samples(len(self.data))
@@ -207,10 +211,13 @@ class WrapperGAN(ABC):
             plt.xlabel("Value")
             plt.ylabel("Time")
             plt.legend()
+            if save:
+                plt.savefig(f"ts_generated_{column}_compared.png")
         plt.show()
 
     @staticmethod
-    def plot_results(losses, gradients, metrics):
+    def plot_results(losses, gradients, metrics, save=False):
+        # Save Loss Evolution
         fig, axes = plt.subplots(2 + len(metrics))
         for loss in losses:
             axes[0].plot(losses[loss], label=loss)
@@ -223,9 +230,12 @@ class WrapperGAN(ABC):
         axes[1].legend()
 
         for i, metric in enumerate(metrics):
-            axes[i+2].plot(metrics[metric], label=metric.capitalize())
-            axes[i+2].set_title(f'{metric.capitalize()} Evolution')
-            axes[i+2].legend()
-            
-        fig.tight_layout()
+            axes[i + 2].plot(metrics[metric], label=metric.capitalize())
+            axes[i + 2].set_title(f'{metric.capitalize()} Evolution')
+            axes[i + 2].legend()
+
+        fig.tight_layout(h_pad=2, rect=(0, 0, 1, len(metrics) + 2))
+        if save:
+            fig.savefig("training_evolution.pdf", format="pdf", bbox_inches='tight')  # Save as PDF
         plt.show()
+
