@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class Architecture(nn.Module):
     """
-    Flexible Discriminator supporting multiple architectures for time series analysis.
+    Flexible neural network module supporting multiple architectures for time series analysis.
     """
 
     def __init__(self, input_dim, output_dim, sigmoid=True, architecture="MLP", layer_sizes=None, activation=nn.LeakyReLU(0.2, inplace=True)):

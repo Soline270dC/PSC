@@ -105,8 +105,12 @@ class WrapperGAN(ABC):
             if not isinstance(architectures["generator"], dict) or "architecture" not in architectures["generator"] or "layer_sizes" not in architectures["generator"]:
                 raise Exception(
                     "Vous pouvez modifier les architectures avec un dict de forme {'discriminator': {'architecture': 'MLP', 'layer_sizes': ...}, 'generator': {...}}")
-            generator_output_dim = self.output_dim if "hidden_dim" not in self.parameters else self.parameters[
-                "hidden_dim"]
+            if "hidden_dim" not in self.parameters and "seq_length" not in self.parameters:
+                generator_output_dim = self.output_dim
+            elif "hidden_dim" not in self.parameters:
+                generator_output_dim = self.output_dim*self.parameters["seq_length"]
+            else:
+                generator_output_dim = self.parameters["hidden_dim"]
             if len(architectures["generator"]["layer_sizes"]) == 0 or architectures["generator"]["layer_sizes"][-1] != generator_output_dim:
                 raise Exception(f"La dernière couche doit avoir la dimension de sortie {generator_output_dim}")
             self.modify_generator(architectures["generator"]["architecture"], architectures["generator"]["layer_sizes"])

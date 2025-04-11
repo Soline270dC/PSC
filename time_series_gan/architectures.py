@@ -61,7 +61,9 @@ class Embedder(nn.Module):
         self.seq_length = seq_length
         self.input_dim = input_dim
         self.model = nn.Sequential(
-            nn.Linear(input_dim*seq_length, 512),
+            nn.Linear(input_dim*seq_length, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
             nn.ReLU(),
             nn.Linear(512, 256),
             nn.ReLU(),
@@ -88,7 +90,9 @@ class Recovery(nn.Module):
         self.seq_length = seq_length
         self.output_dim = output_dim
         self.model = nn.Sequential(
-            nn.Linear(hidden_dim,  512),
+            nn.Linear(hidden_dim,  1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
             nn.ReLU(),
             nn.Linear(512, 256),
             nn.ReLU(),
