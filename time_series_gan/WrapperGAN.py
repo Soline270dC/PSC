@@ -222,4 +222,6 @@ class WrapperGAN(ABC):
             axes[i+2].plot(metrics[metric], label=metric.capitalize())
             axes[i+2].set_title(f'{metric.capitalize()} Evolution')
             axes[i+2].legend()
-            plt.show()
+            
+        fig.tight_layout()
+        plt.show()

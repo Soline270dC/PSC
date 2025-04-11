@@ -94,8 +94,8 @@ class ModelTimeGAN(WrapperGAN):
 
     def evaluate_autoencoder(self):
         loss_fn = nn.MSELoss()
-        torch_val_data = torch.from_numpy(self.val_data)
-        x_recon = self.recovery(self.embedder(torch_val_data))
+        torch_val_data = torch.from_numpy(self.val_data).float()
+        x_recon = self.recovery(self.embedder(torch_val_data)).reshape(-1, self.output_dim)
         loss = loss_fn(torch_val_data, x_recon)
 
         print(f"Autoencoder Reconstruction Loss: {loss.item():.4f}")
@@ -105,13 +105,13 @@ class ModelTimeGAN(WrapperGAN):
 
     @staticmethod
     def plot_real_vs_reconstructed(real, recon):
-        real = np.concatenate(real, axis=0)
-        recon = np.concatenate(recon, axis=0)
+        real = np.concatenate(real, axis=0)[:min(len(real), 100)]
+        recon = np.concatenate(recon, axis=0)[:min(len(recon), 100)]
 
         # Ensure you're plotting the data correctly (assuming shape (time_steps, features))
         plt.figure(figsize=(12, 5))
-        plt.plot(real, label="Real Data (1st Feature)", alpha=0.7)  # Plot the first feature
-        plt.plot(recon, label="Reconstructed Data (1st Feature)", linestyle="dashed")  # Plot the first feature
+        plt.plot(real, label="Real Data", alpha=0.7)  # Plot the first feature
+        plt.plot(recon, label="Reconstructed Data", linestyle="dashed")  # Plot the first feature
         plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
         plt.title("Autoencoder: Real vs Reconstructed")
         plt.show()

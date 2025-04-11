@@ -87,7 +87,7 @@ class TimeWGAN(ModelTimeGAN):
                     optimizer_C.step()
 
                 # Training Generator
-                z_g = torch.randn(batch.size(dim=0), self.parameters["seq_length"], self.parameters["latent_dim"]).float()
+                z_g = torch.randn(batch.size(dim=0), self.parameters["latent_dim"]).float()
                 h_fake_g = self.generator(z_g)
                 fake_score_g = self.critic(h_fake_g)
                 loss_g = -torch.mean(fake_score_g)

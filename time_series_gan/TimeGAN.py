@@ -45,7 +45,7 @@ class TimeGAN(ModelTimeGAN):
         grad_r_list = []
 
         for epoch in range(self.parameters["epochs"]):
-            for i, batch in enumerate(self.train_loader):
+            for i, (batch,) in enumerate(self.train_loader):
                 real_data = batch
 
                 # Pre-training Embedder/Recovery
@@ -70,7 +70,7 @@ class TimeGAN(ModelTimeGAN):
                     optimizer_D.step()
 
                 # Training Generator
-                z_g = torch.randn(batch.size(dim=0), self.parameters["seq_length"], self.parameters["latent_dim"]).float()
+                z_g = torch.randn(batch.size(dim=0), self.parameters["latent_dim"]).float()
                 h_fake_g = self.generator(z_g)
                 fake_score_g = self.discriminator(h_fake_g)
                 loss_g = -torch.mean(torch.log(fake_score_g + 1e-8))
