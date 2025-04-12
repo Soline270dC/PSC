@@ -10,9 +10,10 @@ from gestion_long_prog import *
 
 
 #PRESENTATION DES RESULTATS__________________________________________________________________________
-def courbes_discri(generator, data, latent_dim):
-    z = torch.randn(10000, latent_dim)
-    fake_data = generator(z)
+def courbes_discri(mon_gan):
+    z = torch.randn(10000, mon_gan.archi.parameters["latent_dim"])
+    fake_data = mon_gan.generator(z)
+    #print(fake_data)
     fake_data_np = fake_data.detach().numpy()
     fig, axes = plt.subplots(4, 2, figsize=(12, 16)) 
     for i in range(4):
@@ -38,14 +39,24 @@ def courbes_discri(generator, data, latent_dim):
 #ZONE DE TEST________________________________________________________________________________________
 
 data = init_data()
+
 """
-archi =Architecture (0.0008,[28], [45, 49, 43, 19, 36, 36, 10, 10, 13, 21],[nn.Sigmoid()] ,[nn.ReLU(), nn.ReLU(), nn.Tanh(), nn.Tanh(), nn.Tanh(), nn.ReLU(), nn.ReLU(), nn.Tanh(), nn.Tanh(), nn.ReLU()],10)
-generator,discriminator = Generator(archi) , Discriminator(archi)
-generator, discriminator = entrainement(generator,discriminator, num_epochs, archi.lr)
+archi = Architecture(
+    lr=0.0008,
+    couches_gene=[28],  
+    fct_transi_gene=[nn.ReLU()],  
+    couches_discri=[45, 49, 43, 19, 36, 36, 10, 10, 13, 21],  
+    fct_transi_discri=[nn.ReLU(), nn.ReLU(), nn.Tanh(), nn.Tanh(), nn.Tanh(),nn.ReLU(), nn.ReLU(), nn.Tanh(), nn.Tanh(), nn.ReLU()],
+    latent_dim=10,
+    data_dim=4
+)
+mon_gan = GAN(data, archi=archi)
+mon_gan.entrainer()
+
+courbes_discri(mon_gan)
+"""
 
 
-courbes_discri(generator, archi.latent_dim)
-"""
 """
 archi =Architecture (0.0002,[128,256,128], [128,64],[nn.ReLU(),nn.ReLU(),nn.ReLU()] ,[nn.LeakyReLU(0.2), nn.LeakyReLU(0.2)],10)
 generator,discriminator = Generator(archi) , Discriminator(archi)
@@ -59,7 +70,7 @@ print(list_res)
 """
 
 
-#Metropolis_Hasting(0.1, data, ite = 500)
+Metropolis_Hasting(0.1, data, ite = 1000, analyse=False)
 #generer_resultats(0.1, ite = 10000)
 """
 results=charger_resultats()

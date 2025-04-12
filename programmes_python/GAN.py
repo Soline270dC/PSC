@@ -14,21 +14,29 @@ from initialisation import *
 
 #ARCHITECTURE________________________________________________________________________________________
 class Architecture():
-    def __init__(self, lr, couches_gene, couches_discri, fct_transi_gene, fct_transi_discri, latent_dim):
-        self.lr = lr
-        self.couches_gene = couches_gene  # Une liste indiquant le nb de neuronnes à chaque couche
-        self.couches_discri = couches_discri
-        self.fct_transi_gene = fct_transi_gene  # Une liste indiquant les fonctions de transi sous la forme [nn.reLU(), nn. , ...]
-        self.fct_transi_discri = fct_transi_discri
-        self.latent_dim = latent_dim
+    def __init__(self, lr=0.0001, couches_gene=[], couches_discri=[], fct_transi_gene=[], fct_transi_discri=[], latent_dim=10, data_dim=4, nombre_epochs=50):
+        self.parameters={}
+        self.reseaux={}
 
+        self.reseaux["gene"]={"couches":couches_gene, "fct_transi":fct_transi_gene}
+        self.reseaux["discri"]={"couches":couches_discri, "fct_transi":fct_transi_discri}
+        self.parameters["lr"]=lr
+        self.parameters["latent_dim"]=latent_dim
+        self.parameters	["nombre_epochs"]=nombre_epochs
+
+        self.data_dim = data_dim
+        #batch-size
+        #nombre d'epochs
+
+
+        
     def print_archi(self):
-        print(self.lr)
-        print(self.latent_dim)
-        print(self.couches_gene)
-        print(self.couches_discri)
-        print(self.fct_transi_gene)
-        print(self.fct_transi_discri)
+        print("learning rate : ", str(self.parameters["lr"]))
+        print("latent_dim : ", str(self.parameters["latent_dim"]))
+        print(self.reseaux["gene"]["couches"])
+        print(self.reseaux["gene"]["fct_transi"])
+        print(self.reseaux["discri"]["couches"])
+        print(self.reseaux["discri"]["fct_transi"])
         print("")
         print("")
 
@@ -38,16 +46,16 @@ class Generator(nn.Module):
         #archi est un objet de classe Architecture
         super(Generator, self).__init__()
         
-        n=len(archi.couches_gene)
+        n=len(archi.reseaux["gene"]["couches"])
         if n==0:
-            layers=[nn.Linear(archi.latent_dim, data_dim)]
+            layers=[nn.Linear(archi.parameters["latent_dim"], archi.data_dim)]
         else:
             layers=[]
-            layers.append(nn.Linear(archi.latent_dim, archi.couches_gene[0]))
+            layers.append(nn.Linear(archi.parameters["latent_dim"], archi.reseaux["gene"]["couches"][0]))
             for i in range (n-1):
-                layers.append(archi.fct_transi_gene[i])
-                layers.append(nn.Linear(archi.couches_gene[i], archi.couches_gene[i+1]))
-            layers.append(nn.Linear(archi.couches_gene[n-1], data_dim))
+                layers.append(archi.reseaux["gene"]["fct_transi"][i])
+                layers.append(nn.Linear(archi.reseaux["gene"]["couches"][i], archi.reseaux["gene"]["couches"][i+1]))
+            layers.append(nn.Linear(archi.reseaux["gene"]["couches"][n-1], archi.data_dim))
 
         self.model = nn.Sequential(*layers)
     
@@ -59,16 +67,16 @@ class Discriminator(nn.Module):
     def __init__(self, archi):
         super(Discriminator, self).__init__()
 
-        n=len(archi.couches_discri)
+        n=len(archi.reseaux["discri"]["couches"])
         if n==0:
-            layers=[nn.Linear(data_dim,1 )]
+            layers=[nn.Linear(archi.data_dim,1 )]
         else:
             layers=[]
-            layers.append(nn.Linear(data_dim, archi.couches_discri[0]))
+            layers.append(nn.Linear(archi.data_dim, archi.reseaux["discri"]["couches"][0]))
             for i in range (n-1):
-                layers.append(archi.fct_transi_discri[i])
-                layers.append(nn.Linear(archi.couches_discri[i], archi.couches_discri[i+1]))
-            layers.append(nn.Linear(archi.couches_discri[n-1], 1))
+                layers.append(archi.reseaux["discri"]["fct_transi"][i])
+                layers.append(nn.Linear(archi.reseaux["discri"]["couches"][i], archi.reseaux["discri"]["couches"][i+1]))
+            layers.append(nn.Linear(archi.reseaux["discri"]["couches"][n-1], 1))
 
         layers.append(nn.Sigmoid())
         self.model = nn.Sequential(*layers)
@@ -77,56 +85,52 @@ class Discriminator(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-# Fonction de perte
-criterion = nn.BCELoss()
+class GAN():
+    def __init__(self, data, archi=Architecture()):
+        self.archi = archi
+        self.generator = Generator(archi)
+        self.discriminator = Discriminator(archi)
+        self.data =  data
 
-#ENTRAINEMENT___________________________________________________________________________________________
-def entrainement(generator,discriminator, data, num_epochs, learning_rate):
-    latent_dim = generator.model[0].in_features
+    def entrainer(self, batch_size=None):
+        criterion = nn.BCELoss()
 
-    generator_local = copy.deepcopy(generator)
-    discriminator_local = copy.deepcopy(discriminator)
+        latent_dim = self.archi.parameters["latent_dim"]
+        learning_rate = self.archi.parameters["lr"]
 
-    optimizer_G_local = optim.Adam(generator_local.parameters(), lr=learning_rate)
-    optimizer_D_local = optim.Adam(discriminator_local.parameters(), lr=learning_rate)
+        optimizer_G = optim.Adam(self.generator.parameters(), lr=learning_rate)
+        optimizer_D = optim.Adam(self.discriminator.parameters(), lr=learning_rate)
 
-    l=[]
-    for epoch in range(num_epochs):
-        testr=0
-        for real_data in data.train_dataloader:
-            # Données réelles (vecteurs de taille 4)
-            real_labels = torch.ones(batch_size, 1)
-            fake_labels = torch.zeros(batch_size, 1)
+        for epoch in range(self.archi.parameters["nombre_epochs"]):
+            for real_data in self.data.train_dataloader:
+                if batch_size is None:
+                    batch_size = real_data.size(0)
 
-            # Entraînement du Discriminateur
-            outputs = discriminator_local(real_data)
-            d_loss_real = criterion(outputs, real_labels)
+                real_labels = torch.ones(batch_size, 1)
+                fake_labels = torch.zeros(batch_size, 1)
 
-            # Données générées
-            z = torch.randn(batch_size, latent_dim)
-            fake_data = generator_local(z)
-            outputs = discriminator_local(fake_data.detach())
-            # if testr ==0:
-            #     print(discriminator(fake_data.detach()) == discriminator(fake_data))
-            #     # print(discriminator(fake_data))
-            #     testr=1
-            d_loss_fake = criterion(outputs, fake_labels)
+                # Discriminateur
+                outputs = self.discriminator(real_data)
+                d_loss_real = criterion(outputs, real_labels)
 
-            # Total Discriminateur
-            d_loss = d_loss_real + d_loss_fake
-            optimizer_D_local.zero_grad()
-            d_loss.backward()
-            optimizer_D_local.step()
+                z = torch.randn(batch_size, latent_dim)
+                fake_data = self.generator(z)
+                outputs = self.discriminator(fake_data.detach())
+                d_loss_fake = criterion(outputs, fake_labels)
 
-            # Entraînement du Générateur
-            outputs = discriminator_local(fake_data)
-            g_loss = criterion(outputs, real_labels)
-            optimizer_G_local.zero_grad()
-            g_loss.backward()
-            optimizer_G_local.step()
+                d_loss = d_loss_real + d_loss_fake
+                optimizer_D.zero_grad()
+                d_loss.backward()
+                optimizer_D.step()
 
-        #print(f'Epoch [{epoch+1}/{num_epochs}], d_loss: {d_loss.item()}, g_loss: {g_loss.item()}')
-    return generator_local, discriminator_local
+                # Générateur
+                outputs = self.discriminator(fake_data)
+                g_loss = criterion(outputs, real_labels)
+                optimizer_G.zero_grad()
+                g_loss.backward()
+                optimizer_G.step()
+
+            #print(f"[{epoch+1}/{num_epochs}] D loss: {d_loss.item():.4f} | G loss: {g_loss.item():.4f}")
 
 
 

@@ -1,5 +1,6 @@
 
 import random
+import copy
 
 from initialisation import *
 from GAN import *
@@ -8,96 +9,71 @@ from estimation_modele import *
 
 def archi_adj(archi):
     """Renvoie une architecture <<adjacente>> à archi"""
-    liste_fct_transi = [nn.ReLU(),nn.Tanh(),nn.Sigmoid()]
+    liste_fct_transi = [nn.ReLU(), nn.Tanh(), nn.Sigmoid()]
+    new_archi = copy.deepcopy(archi)
 
-    def supprimer_couche_gene(archi):
-        n= len(archi.couches_gene)
-        k= random.randint(0,n-1)
-        new_couches=[]
-        new_fct_transi=[]
+    def supprimer_couche(reseau):
+        n = len(new_archi.reseaux[reseau]["couches"])
+        if n == 0:
+            return [], []
+        k = random.randint(0, n - 1)
+        new_couches = []
+        new_fct_transi = []
         for i in range(n):
-            if i !=k:
-                new_couches.append(archi.couches_gene[i])
-                new_fct_transi.append(archi.fct_transi_gene[i])
-        return Architecture(archi.lr, new_couches, archi.couches_discri, new_fct_transi, archi.fct_transi_discri, archi.latent_dim)
+            if i != k:
+                new_couches.append(new_archi.reseaux[reseau]["couches"][i])
+                new_fct_transi.append(new_archi.reseaux[reseau]["fct_transi"][i])
+        return new_couches, new_fct_transi
 
-    def supprimer_couche_discri(archi):
-        n= len(archi.couches_discri)
-        k= random.randint(0,n-1)
-        new_couches=[]
-        new_fct_transi=[]
+    def ajouter_couche(reseau):
+        n = len(new_archi.reseaux[reseau]["couches"])
+        k = random.randint(0, n)
+        new_couches = []
+        new_fct_transi = []
         for i in range(n):
-            if i !=k:
-                new_couches.append(archi.couches_discri[i])
-                new_fct_transi.append(archi.fct_transi_discri[i])
-        return Architecture(archi.lr, archi.couches_gene , new_couches, archi.fct_transi_gene, new_fct_transi, archi.latent_dim)
-
-    def ajouter_couche_gene(archi):
-        n= len(archi.couches_gene)
-        k= random.randint(0,n)
-        new_couches=[]
-        new_fct_transi=[]
-        for i in range(n):
-            if i ==k:
-                new_couches.append(random.randint(10,50))
+            if i == k:
+                new_couches.append(random.randint(10, 50))
                 new_fct_transi.append(random.choice(liste_fct_transi))
-            new_couches.append(archi.couches_gene[i])
-            new_fct_transi.append(archi.fct_transi_gene[i])
-        if k ==n:
-            new_couches.append(random.randint(10,50))
+            new_couches.append(new_archi.reseaux[reseau]["couches"][i])
+            new_fct_transi.append(new_archi.reseaux[reseau]["fct_transi"][i])
+        if k == n:
+            new_couches.append(random.randint(10, 50))
             new_fct_transi.append(random.choice(liste_fct_transi))
-        return Architecture(archi.lr, new_couches, archi.couches_discri, new_fct_transi, archi.fct_transi_discri, archi.latent_dim)
+        return new_couches, new_fct_transi
 
-    def ajouter_couche_discri(archi):
-        n= len(archi.couches_discri)
-        k= random.randint(0,n)
-        new_couches=[]
-        new_fct_transi=[]
-        for i in range(n):
-            if i ==k:
-                new_couches.append(random.randint(10,50))
-                new_fct_transi.append(random.choice(liste_fct_transi))
-            new_couches.append(archi.couches_discri[i])
-            new_fct_transi.append(archi.fct_transi_discri[i])
-        if k ==n:
-            new_couches.append(random.randint(10,50))
-            new_fct_transi.append(random.choice(liste_fct_transi))
-        return Architecture(archi.lr, archi.couches_gene , new_couches, archi.fct_transi_gene, new_fct_transi, archi.latent_dim)
 
-    def changer_lr(archi):
-        if random.random()<0.5:
-            return Architecture(archi.lr/2, archi.couches_gene ,  archi.couches_discri, archi.fct_transi_gene, archi.fct_transi_discri, archi.latent_dim)
+    def modifier_1_param(param):
+   
+        variation = random.uniform(0.5, 2.)
+        
+        if type(new_archi.parameters[param]) == int:
+            return int(new_archi.parameters[param] * variation) 
         else:
-            return Architecture(archi.lr*2, archi.couches_gene ,  archi.couches_discri, archi.fct_transi_gene, archi.fct_transi_discri, archi.latent_dim)
-    
-    def changer_latent_dim(archi):
-        new_latent_dim = random.randint(10,100)
-        return Architecture(archi.lr, archi.couches_gene ,  archi.couches_discri, archi.fct_transi_gene, archi.fct_transi_discri, new_latent_dim)
+            return new_archi.parameters[param] * variation 
+
 
     epsilon = random.random()
-    if epsilon < 1/6:
-        print("modification du Learning rate")
-        return changer_lr(archi)
-    elif epsilon < 2/6:
-        print("modification de Latent dim")
-        return changer_latent_dim(archi)
-    elif epsilon < 3/6 and len(archi.couches_gene)!=0:
-        print("suppression d'une couche du générateur")
-        return supprimer_couche_gene(archi)
-    elif epsilon < 4/6:
-        print("ajout d'une couche au générateur")
-        return ajouter_couche_gene(archi)
-    elif epsilon < 5/6 and len(archi.couches_discri)!=0:
-        print("suppression d'une couche du discriminateur")
-        return supprimer_couche_discri(archi)
+    if epsilon < 1 / 4:
+        reseau = random.choice(list(archi.reseaux.keys()))
+        new_archi.reseaux[reseau]["couches"], new_archi.reseaux[reseau]["fct_transi"] = supprimer_couche(reseau)
+        print("suppression d'une couche du " + reseau)
+    elif epsilon < 2 / 4:
+        reseau = random.choice(list(archi.reseaux.keys()))
+        new_archi.reseaux[reseau]["couches"], new_archi.reseaux[reseau]["fct_transi"] = ajouter_couche(reseau)
+        print("ajout d'une couche au " + reseau)
     else:
-        print("ajout d'une couche au discriminateur")
-        return ajouter_couche_discri(archi)
+        param = random.choice(list(new_archi.parameters.keys()))
+        new_archi.parameters[param] = modifier_1_param(param)
+        print("modification de " + param)
+
+    
+
+    return new_archi
 
 
 
 def Metropolis_Hasting(beta, data, ite = 10, analyse= False):
-    archi =Architecture (0.0002,[], [],[] ,[], 20)
+    archi =Architecture ()
     qualite = test_architecture(archi, data)
 
     resultats=[]

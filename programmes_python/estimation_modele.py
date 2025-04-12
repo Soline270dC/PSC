@@ -26,19 +26,19 @@ def Wassertstein_esti (data_reelle, data_simu, ite=1000):
 
 
 #ESTIMATION ET OPTIMISATION____________________________________________________________________________________
-def esti_modele(generator, data, nb_points = 1000):
-    latent_dim = generator.model[0].in_features
+def esti_modele(mon_gan,  nb_points = 1000):
+    latent_dim = mon_gan.generator.model[0].in_features
     z = torch.randn(nb_points, latent_dim)
-    fake_data = generator(z)
+    fake_data = mon_gan.generator(z)
     fake_data_np = fake_data.detach().numpy() 
-    return Wassertstein_esti (data.all_data_val_np, fake_data_np)
+    return Wassertstein_esti (mon_gan.data.all_data_val_np, fake_data_np)
 
 def test_architecture(archi, data, nb_ite=1):
     # Initialisation des modèles
     s=0
     for i in range(nb_ite):
-        generator,discriminator = Generator(archi) , Discriminator(archi)
-        generator, discriminator = entrainement(generator,discriminator, data, num_epochs, archi.lr)
-        x=esti_modele(generator, data)
+        mon_gan = GAN( data=data, archi=archi)
+        mon_gan.entrainer()
+        x=esti_modele(mon_gan)
         s+= x
     return s / nb_ite
