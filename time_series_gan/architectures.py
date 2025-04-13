@@ -47,6 +47,19 @@ class Critic(Architecture):
         super().__init__(input_dim, 1, sigmoid=False, architecture="MLP")
 
 
+class Sequencer(Architecture):
+    """
+        Class implementing a model determining whether the input is one sequence of data or two combined
+        It is used in TimeGAN, TimeWGAN and WTSGAN to force the generator to output realistic overall sequences
+        (ie. realistic long sequences which are small sequences combined) instead of just realistic small sequences
+        Input: vector of data, real or generated
+        Output: 0-1 value describing whether the input is one whole sequence or two combined
+    """
+
+    def __init__(self, input_dim):
+        super().__init__(input_dim, 1, sigmoid=True, architecture="MLP")
+
+
 class Embedder(nn.Module):
     """
         Class implementing an embedder model used in TimeGAN and TimeWGAN. Maps input sequences into a hidden space
