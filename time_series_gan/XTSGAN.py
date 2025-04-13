@@ -1,5 +1,6 @@
 from .WrapperGAN import *
 from sklearn.model_selection import train_test_split
+import torch.nn.functional as F
 
 
 class XTSGAN(WrapperGAN):
@@ -7,7 +8,7 @@ class XTSGAN(WrapperGAN):
     def __init__(self):
         super().__init__()
         self.parameters = {"lr_g": 1e-5, "lr_c": 1e-5, "epochs": 100, "batch_size": 32,
-                           "latent_dim": 100, "seq_length": 10, "n_critic": 2, "lambda_gp": 0.1}
+                           "latent_dim": 100, "seq_length": 10, "n_critic": 2, "lambda_gp": 0.1, "variance_coeff": 0}
 
     def set_architecture(self):
         if self.data is None:
@@ -147,9 +148,13 @@ class XTSGAN(WrapperGAN):
 
                 # Training Generator
                 z_g = torch.randn(batch.size(dim=0), self.parameters["latent_dim"]).float()
+                z_g_ = torch.randn(batch.size(dim=0), self.parameters["latent_dim"]).float()
                 h_fake_g = self.generator(z_g)
+                seq_ = self.generator(z_g_).reshape(batch.size(dim=0), self.parameters["seq_length"], self.output_dim)[:, 0, :]
+                seq = h_fake_g.reshape(batch_size, self.parameters["seq_length"], self.output_dim)[:, -1, :]
+                distances = F.pairwise_distance(seq, seq_, p=2)
                 fake_score_g = self.critic(h_fake_g)
-                loss_g = -torch.mean(fake_score_g)
+                loss_g = -torch.mean(fake_score_g) + self.parameters["variance_coeff"] * distances.mean()
                 optimizer_G.zero_grad()
                 loss_g.backward()
                 optimizer_G.step()

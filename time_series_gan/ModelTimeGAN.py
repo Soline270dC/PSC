@@ -1,5 +1,6 @@
 from .WrapperGAN import *
 from sklearn.model_selection import train_test_split
+import torch.nn.functional as F
 
 
 class ModelTimeGAN(WrapperGAN):
@@ -73,7 +74,7 @@ class ModelTimeGAN(WrapperGAN):
         losses, gradients, metrics = self.train(verbose=verbose)
         if verbose is True:
             self.plot_results(losses, gradients, metrics, save=save)
-            self.evaluate_autoencoder()
+            self.evaluate_autoencoder(save=save)
             self.plot_series(save=save)
             self.plot_compare_series(save=save)
             self.plot_histograms(save=save)
@@ -81,7 +82,7 @@ class ModelTimeGAN(WrapperGAN):
             if "results" in verbose:
                 self.plot_results(losses, gradients, metrics, save=save)
             if "autoencoder" in verbose:
-                self.evaluate_autoencoder()
+                self.evaluate_autoencoder(save=save)
             if "trend_series" in verbose:
                 self.plot_series(save=save)
             if "compare_series" in verbose:
@@ -92,7 +93,7 @@ class ModelTimeGAN(WrapperGAN):
                          self.compute_val_metric(self.metrics[metric]["function"], self.metrics[metric]["metric_args"]))
                 for metric in self.metrics}
 
-    def evaluate_autoencoder(self):
+    def evaluate_autoencoder(self, save=False):
         loss_fn = nn.MSELoss()
         torch_val_data = torch.from_numpy(self.val_data).float()
         x_recon = self.recovery(self.embedder(torch_val_data)).reshape(-1, self.output_dim)
@@ -101,10 +102,10 @@ class ModelTimeGAN(WrapperGAN):
         print(f"Autoencoder Reconstruction Loss: {loss.item():.4f}")
 
         # Plot real vs reconstructed samples for visual inspection
-        self.plot_real_vs_reconstructed(torch_val_data.detach().numpy(), x_recon.detach().numpy())
+        self.plot_real_vs_reconstructed(torch_val_data.detach().numpy(), x_recon.detach().numpy(), save=save)
 
     @staticmethod
-    def plot_real_vs_reconstructed(real, recon):
+    def plot_real_vs_reconstructed(real, recon, save=False):
         real = np.concatenate(real, axis=0)[:min(len(real), 100)]
         recon = np.concatenate(recon, axis=0)[:min(len(recon), 100)]
 
@@ -114,4 +115,6 @@ class ModelTimeGAN(WrapperGAN):
         plt.plot(recon, label="Reconstructed Data", linestyle="dashed")  # Plot the first feature
         plt.legend(loc="upper left", bbox_to_anchor=(1, 1))
         plt.title("Autoencoder: Real vs Reconstructed")
+        if save:
+            plt.savefig("Autoencoder_performance.png")
         plt.show()
