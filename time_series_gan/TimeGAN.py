@@ -6,7 +6,7 @@ class TimeGAN(ModelTimeGAN):
     def __init__(self):
         super().__init__()
         self.discriminator = None
-        self.parameters = {"lr_g": 1e-5, "lr_d": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2, "variance_coeff": 0}
+        self.parameters = {"lr_g": 1e-5, "lr_d": 1e-5, "lr_e": 5e-3, "lr_r": 5e-3, "epochs": 100, "batch_size": 32, "latent_dim": 100, "hidden_dim": 128, "seq_length": 10, "n_critic": 2}
 
     def set_architecture(self):
         super().set_architecture()
@@ -71,14 +71,9 @@ class TimeGAN(ModelTimeGAN):
 
                 # Training Generator
                 z_g = torch.randn(batch.size(dim=0), self.parameters["latent_dim"]).float()
-                z_g_ = torch.randn(batch.size(dim=0), self.parameters["latent_dim"]).float()
                 h_fake_g = self.generator(z_g)
-                h_fake_g_ = self.generator(z_g_)
-                seq = self.recovery(h_fake_g)[:, -1, :]
-                seq_ = self.recovery(h_fake_g_)[:, 0, :]
-                distances = F.pairwise_distance(seq, seq_, p=2)
                 fake_score_g = self.discriminator(h_fake_g)
-                loss_g = -torch.mean(torch.log(fake_score_g + 1e-8)) + self.parameters["variance_coeff"] * distances.mean()
+                loss_g = -torch.mean(torch.log(fake_score_g + 1e-8))
                 optimizer_G.zero_grad()
                 loss_g.backward()
                 optimizer_G.step()

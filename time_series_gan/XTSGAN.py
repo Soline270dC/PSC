@@ -12,26 +12,26 @@ class XTSGAN(WTSGAN):
 
     def set_architecture(self):
         super().set_architecture()
-        self.sequencer = Sequencer(self.output_dim*2)
+        self.sequencer = Sequencer(self.output_dim*self.parameters["seq_length"]//2)
         self.sequencer.apply(self.weights_init)
 
-    def train_sequencer(self, batch_size, real_tuples, loss_fn, optimizer_S):
-        indices = torch.randint(0, self.parameters["seq_length"]-1, (batch_size, ))
+    def train_sequencer(self, seq_size, batch_size, real_tuples, loss_fn, optimizer_S):
+        indices = torch.randint(0, seq_size, (batch_size, ))
 
         # Gather the selected time steps
         seq_combined = torch.stack([
             real_tuples[torch.arange(batch_size), indices[:]],
-            real_tuples[torch.arange(batch_size), indices[:]+1]
+            real_tuples[torch.arange(batch_size), indices[:]+seq_size]
         ], dim=1)
 
         # Generate fake sequences for the second batch
         z_fake_1 = torch.randn(batch_size, self.parameters["latent_dim"]).float()
         z_fake_2 = torch.randn(batch_size, self.parameters["latent_dim"]).float()
-        seq_fake_1 = self.generator(z_fake_1).reshape(batch_size, self.parameters["seq_length"], self.output_dim)[:, -1, :]
-        seq_fake_2 = self.generator(z_fake_2).reshape(batch_size, self.parameters["seq_length"], self.output_dim)[:, 0, :]
+        seq_fake_1 = self.generator(z_fake_1).reshape(batch_size, self.parameters["seq_length"], self.output_dim)[:, -seq_size//2+1:, :]
+        seq_fake_2 = self.generator(z_fake_2).reshape(batch_size, self.parameters["seq_length"], self.output_dim)[:, :seq_size-seq_size//2, :]
 
         # Concatenate the fake sequences and apply slicing
-        seq_fake = torch.cat((seq_fake_1, seq_fake_2), dim=1).reshape(batch_size, 2, self.output_dim)
+        seq_fake = torch.cat((seq_fake_1, seq_fake_2), dim=1).reshape(batch_size, seq_size, self.output_dim)
 
         # Labels for real (1) and fake (0) sequences
         labels = torch.cat((torch.ones(batch_size), torch.zeros(batch_size)))
@@ -43,7 +43,7 @@ class XTSGAN(WTSGAN):
         shuffled_labels = labels[indices]
 
         # Predict and compute the loss
-        predict = self.sequencer(shuffled_data.reshape(2*batch_size, 2 * self.output_dim)).reshape(2*batch_size)
+        predict = self.sequencer(shuffled_data.reshape(2*batch_size, seq_size * self.output_dim)).reshape(2*batch_size)
         loss_s = loss_fn(shuffled_labels, predict)
 
         # Backpropagation
@@ -59,6 +59,8 @@ class XTSGAN(WTSGAN):
         optimizer_S = optim.Adam(self.sequencer.parameters(), lr=self.parameters["lr_s"])
         loss_fn = nn.MSELoss()
 
+        seq_size = self.parameters["seq_length"]//2
+
         metrics = {metric: [] for metric in self.metrics}
         loss_g_list = []
         loss_c_list = []
@@ -71,7 +73,7 @@ class XTSGAN(WTSGAN):
                 batch_size = batch.shape[0]
                 real_tuples = batch.float()
 
-                loss_s = self.train_sequencer(batch_size, real_tuples, loss_fn, optimizer_S)
+                loss_s = self.train_sequencer(seq_size, batch_size, real_tuples, loss_fn, optimizer_S)
 
                 for _ in range(self.parameters["n_critic"]):
                     # Training Critic
@@ -90,8 +92,8 @@ class XTSGAN(WTSGAN):
                 z_g = torch.randn(batch.size(dim=0), self.parameters["latent_dim"]).float()
                 z_g_1 = torch.randn(batch.size(dim=0), self.parameters["latent_dim"]).float()
                 h_fake_g = self.generator(z_g)
-                fake_2 = self.generator(z_g_1)[:, :self.output_dim]
-                fake_1 = h_fake_g[:, -self.output_dim:]
+                fake_2 = self.generator(z_g_1)[:, :self.output_dim*seq_size]
+                fake_1 = h_fake_g[:, -self.output_dim*seq_size:]
                 seq_fake = torch.cat((fake_1, fake_2), dim=1)
                 score_sequence = self.sequencer(seq_fake)
                 fake_score_g = self.critic(h_fake_g)
