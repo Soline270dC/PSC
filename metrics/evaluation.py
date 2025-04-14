@@ -1,6 +1,11 @@
 def INND(P, Q, d) :
     """
     measures estimation of the distribution function
+    input
+    ------
+    P : array-like, real data
+    Q : array-like, generated data
+    d : callable, distance on the P[i] and Q[j]s
     """
     p, q = len(P), len(Q)
     innd = 0
@@ -11,6 +16,11 @@ def INND(P, Q, d) :
 def ONND(P, Q, d) :
     """
     measures flexibility of the estimation
+    input
+    ------
+    P : array-like, real data
+    Q : array-like, generated data
+    d : callable, distance on the P[i] and Q[j]s
     """
     p, q = len(P), len(Q)
     onnd = 0
@@ -21,6 +31,11 @@ def ONND(P, Q, d) :
 def ICD(P, Q, d) :
     """
     accounts for mode collapse issues
+    input
+    ------
+    P : array-like, real data
+    Q : array-like, generated data
+    d : callable, distance on the P[i] and Q[j]s
     """
     p, q = len(P), len(Q)
     icdP = 0
@@ -31,10 +46,4 @@ def ICD(P, Q, d) :
     for i in range(q) :
         for j in range(q) :
             icdQ += d(Q[i], Q[j])
-    return icdP/(p*p), icdQ/(q*q)
-
-
-"""
-+ temporal correlation
-+ approximated entropy
-"""
+    return (icdP/(p*p)-icdQ/(q*q))**2
