@@ -1,7 +1,7 @@
 import optuna
 import torch.nn as nn
 
-def bayesainOpt(f, list_args : list[str], type_args : list[type], range_args : list[tuple[float]], other_args : list, n_trials : int, direction : str = "minimize") -> dict[str, any] :
+def bayesianOpt(f, list_args : list[str], type_args : list[type], range_args : list[tuple[float]], other_args : list, n_trials : int, direction : str = "minimize") -> dict[str, any] :
     """
     input
     --------
