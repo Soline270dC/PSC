@@ -11,6 +11,8 @@ from time import time
 from ot.sliced import sliced_wasserstein_distance
 from .architectures import *
 from abc import ABC, abstractmethod
+import optuna
+from typing import Callable
 
 
 def timeit(func):
@@ -137,7 +139,7 @@ class WrapperGAN(ABC):
 
     def compute_metric(self, metric, metric_args, samples, n_samples):
         generated_data = self.generate_samples(n_samples)
-        return metric(generated_data, samples, **metric_args)
+        return metric(samples, generated_data, **metric_args)
 
     def compute_train_metric(self, metric, metric_args):
         return self.compute_metric(metric, metric_args, self.train_data, len(self.train_data))
@@ -156,6 +158,28 @@ class WrapperGAN(ABC):
             raise Exception("Vous n'avez pas initialisé de données. Voir set_data()")
         parameters = {"n_projections": 1000}
         return self.compute_train_metric(sliced_wasserstein_distance, parameters)
+    
+    def fit_hyperparameters(self, param_ranges : dict[str, list], score : Callable[..., float], n_trials : int = 50, direction : str = "minimize") :
+        """
+        input
+        -------
+        param_ranges: dict[list[int|float]] - dict of (parameter_name, parameter_range)
+        """
+        assert direction in ["miminize","maximize"], "la direction d'optimisation ne peut être que 'minimize' ou 'maximize'"
+        assert param_ranges.keys() == self.parameters.keys(), "param_ranges doit avoir les mêmes clés que self.parameters"
+    
+        def f(trial) :
+            args = {}
+            for param in param_ranges :
+                assert isinstance(param_ranges[param], (list[int], list[float])) and len(param_ranges[param]) == 2, "param_ranges doit avoir pour valeurs des listes de taille 2 d'entiers ou de flottants"
+                suggest = eval("trial.suggest_" + str(type(param_ranges[param][0])))
+                args[param] = suggest(param, *param_ranges[param])
+            self.fit(params = args)
+            return self.compute_val_metric(score, [])
+
+        study = optuna.create_study(direction = direction)
+        study.optimize(f, n_trials = n_trials)
+        self.parameters = study.best_params
 
     def plot_histograms(self, save=False):
         if self.data is None:
