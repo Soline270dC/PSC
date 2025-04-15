@@ -121,3 +121,6 @@ def ICD(P, Q, d = lambda x, y : np.linalg.norm(x - y)) :
         for j in range(q) :
             icdQ += d(Q[i], Q[j])
     return (icdP/(p*p)-icdQ/(q*q))**2
+
+def score(P, Q, d = lambda x, y : np.linalg.norm(x - y)) :
+    pass
