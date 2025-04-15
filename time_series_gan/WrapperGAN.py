@@ -159,7 +159,7 @@ class WrapperGAN(ABC):
         parameters = {"n_projections": 1000}
         return self.compute_train_metric(sliced_wasserstein_distance, parameters)
     
-    def fit_hyperparameters(self, param_ranges : dict[str, list], score : Callable[..., float], n_trials : int = 50, direction : str = "minimize") :
+    def fit_hyperparameters(self, param_ranges : dict[str, list], score : Callable[..., float], score_args : list = [], n_trials : int = 50, direction : str = "minimize") :
         """
         input
         -------
@@ -175,7 +175,7 @@ class WrapperGAN(ABC):
                 suggest = eval("trial.suggest_" + str(type(param_ranges[param][0])))
                 args[param] = suggest(param, *param_ranges[param])
             self.fit(params = args)
-            return self.compute_val_metric(score, [])
+            return self.compute_val_metric(score, score_args)
 
         study = optuna.create_study(direction = direction)
         study.optimize(f, n_trials = n_trials)
