@@ -52,15 +52,25 @@ class Generator(nn.Module):
         else:
             layers=[]
             layers.append(nn.Linear(archi.parameters["latent_dim"], archi.reseaux["gene"]["couches"][0]))
+            layers.append(archi.reseaux["gene"]["fct_transi"][0])
             for i in range (n-1):
-                layers.append(archi.reseaux["gene"]["fct_transi"][i])
                 layers.append(nn.Linear(archi.reseaux["gene"]["couches"][i], archi.reseaux["gene"]["couches"][i+1]))
+                layers.append(archi.reseaux["gene"]["fct_transi"][i+1])
             layers.append(nn.Linear(archi.reseaux["gene"]["couches"][n-1], archi.data_dim))
 
+
         self.model = nn.Sequential(*layers)
-    
+
+        # Produit scalaire avec un vecteur appris (taille = data_dim)
+        self.weight = nn.Parameter(torch.ones(archi.data_dim))  # ou init à autre chose
+        self.bias = nn.Parameter(torch.zeros(archi.data_dim))   # vecteur constant ajouté
+
     def forward(self, z):
-        return self.model(z)
+        #return self.model(z)
+        out = self.model(z)  # [batch_size, data_dim]
+        return out * self.weight + self.bias  # transformation affine élément par élément
+    
+
 
 # Discriminateur
 class Discriminator(nn.Module):
@@ -73,9 +83,10 @@ class Discriminator(nn.Module):
         else:
             layers=[]
             layers.append(nn.Linear(archi.data_dim, archi.reseaux["discri"]["couches"][0]))
+            layers.append(archi.reseaux["discri"]["fct_transi"][0])
             for i in range (n-1):
-                layers.append(archi.reseaux["discri"]["fct_transi"][i])
                 layers.append(nn.Linear(archi.reseaux["discri"]["couches"][i], archi.reseaux["discri"]["couches"][i+1]))
+                layers.append(archi.reseaux["discri"]["fct_transi"][i+1])
             layers.append(nn.Linear(archi.reseaux["discri"]["couches"][n-1], 1))
 
         layers.append(nn.Sigmoid())

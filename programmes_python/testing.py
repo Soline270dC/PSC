@@ -50,9 +50,11 @@ archi = Architecture(
     latent_dim=10,
     data_dim=4
 )
-mon_gan = GAN(data, archi=archi)
-mon_gan.entrainer()
+for i in range(10):
+    mon_gan = GAN(data, archi=archi)
+    mon_gan.entrainer()
 
+    print(esti_modele(mon_gan))
 courbes_discri(mon_gan)
 """
 
