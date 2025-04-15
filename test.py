@@ -90,18 +90,34 @@ from metrics.metrics import dFrechet, dWasserstein, ONND
 #     # for i in range(3) :
 #     values[1]+=metrics[1](r, g)/N
 # print("r (100, 4), g (10, 4) -", values)
+from math import sqrt, exp, log
 
-ndata = np.array([int(p) for p in np.logspace(1, 3, 10)])
-valF = [0 for _ in range(10)]
-valO = [0 for _ in range(10)]
+def d_moy(P: np.ndarray, d = lambda x, y : np.linalg.norm(x - y)) :
+    p = len(P)
+    icdP = 0
+    for i in range(p) :
+        for j in range(p) :
+            icdP += d(P[i], P[j])
+    return icdP/(p*p)
 
-N = 100
+n = 7
+ndata = np.array([int(p) for p in np.logspace(1, 4, n)])
+valO = [0 for _ in range(n)]
+val = 0
+
+N = 10
 
 for _ in range(N) :
-    r = np.random.uniform(size = (ndata[-1], 4))
-    g = np.random.uniform(size = (ndata[-1], 4))
-    for i in range(10) :
-        valF[i] += dFrechet(r[:ndata[i]], g[:ndata[i]])/N
-        valO[i] += ONND(r[:ndata[i]], g[:ndata[i]])/N
-print("dFrechet -", valF)
-print("ONND -", valO)
+    r = np.random.uniform(size = (1000, 8))
+    g = np.random.uniform(size = (1000, 8))
+    val += dFrechet(r, g)*exp(0.27*log(1000))/N
+    # for i in range(n) :
+    #     valO[i] += dWasserstein(r, g[:ndata[i]])/div
+print("dFrechet -", val)
+
+# plt.plot(ndata, valO)
+# plt.title("dWasser en fonction de la taille de G")
+# plt.semilogx()
+# plt.xlabel("taille de G")
+# plt.ylabel("dWasser(R, G)")
+# plt.show()
