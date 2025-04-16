@@ -13,6 +13,7 @@ from .architectures import *
 from abc import ABC, abstractmethod
 import optuna
 from typing import Callable
+from .metrics import score
 
 
 def timeit(func):
@@ -32,7 +33,7 @@ class WrapperGAN(ABC):
 
     def __init__(self):
         self.colors = None
-        self.color_style = "dark"
+        self.color_style: str = "dark"
         self.data = None
         self.train_data = None
         self.val_data = None
@@ -159,20 +160,22 @@ class WrapperGAN(ABC):
         parameters = {"n_projections": 1000}
         return self.compute_train_metric(sliced_wasserstein_distance, parameters)
     
-    def fit_hyperparameters(self, param_ranges : dict[str, list], score : Callable[..., float], score_args : list = [], n_trials : int = 30, direction : str = "minimize") :
+    def fit_hyperparameters(self, param_ranges : dict[str, list], score : Callable[..., float] = score, score_args : dict[str, any] = {}, n_trials : int = 25, direction : str = "minimize") :
         """
         input
         -------
         param_ranges: dict[list[int|float]] - dict of (parameter_name, parameter_range)
         """
-        assert direction in ["miminize","maximize"], "la direction d'optimisation ne peut être que 'minimize' ou 'maximize'"
+        assert direction in ["minimize","maximize"], "la direction d'optimisation ne peut être que 'minimize' ou 'maximize'"
         assert param_ranges.keys() == self.parameters.keys(), "param_ranges doit avoir les mêmes clés que self.parameters"
+
+        # values = {'dWasserstein': [], 'dFrechet': [], 'ONND': []}
     
         def f(trial) :
             args = {}
             for param in param_ranges :
-                assert isinstance(param_ranges[param], (list[int], list[float])) and len(param_ranges[param]) == 2, "param_ranges doit avoir pour valeurs des listes de taille 2 d'entiers ou de flottants"
-                suggest = eval("trial.suggest_" + str(type(param_ranges[param][0])))
+                assert isinstance(param_ranges[param], list) and len(param_ranges[param]) == 2, "param_ranges doit avoir pour valeurs des listes de taille 2 d'entiers ou de flottants"
+                suggest = eval("trial.suggest_" + str(type(param_ranges[param][0]))[8:-2])
                 args[param] = suggest(param, *param_ranges[param])
             self.fit(params = args)
             return self.compute_val_metric(score, score_args)
