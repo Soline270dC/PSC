@@ -159,7 +159,7 @@ class WrapperGAN(ABC):
         parameters = {"n_projections": 1000}
         return self.compute_train_metric(sliced_wasserstein_distance, parameters)
     
-    def fit_hyperparameters(self, param_ranges : dict[str, list], score : Callable[..., float], score_args : list = [], n_trials : int = 50, direction : str = "minimize") :
+    def fit_hyperparameters(self, param_ranges : dict[str, list], score : Callable[..., float], score_args : list = [], n_trials : int = 30, direction : str = "minimize") :
         """
         input
         -------
