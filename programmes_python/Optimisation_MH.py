@@ -1,28 +1,22 @@
 
 from initialisation import *
 from time_series_gan import *
-from estimation_modele import Wassertstein_esti
+from time_series_gan import score
+
+
 import copy
 import random
 import math
 import pickle
 import pandas
 
-data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
-metrics = {
-    "Wasserstein": {
-        "function": Wassertstein_esti,
-        "metric_args": {}
-    }
-}
 
-
-def test (type_model, architectures, params, data):
+def test (type_model, architectures, params, data, metrique, nom_de_la_métrique):
     model = type_model()
-    model.set_metrics(metrics)
+    model.set_metrics({nom_de_la_métrique:{"function":metrique, "metric_args":{}}})
 
     model.set_data(data)
-    return model.fit(params=params, architectures=architectures, verbose=False, save=False)['Wasserstein'][1]
+    return model.fit(params=params, architectures=architectures, verbose=False, save=False)[nom_de_la_métrique][1]
 
 
 def adjacent(archi, params):
@@ -142,7 +136,9 @@ def get_archi(model_de_base, data):
 
 
 
-def Metropolis_Hasting(beta, data, type_model, ite = 10, analyse= False):
+
+
+def Metropolis_Hasting(beta, data, type_model, ite = 10, analyse= False, metrique = score, nom_de_la_métrique="score"):
 
     model_de_base=type_model()
     params = model_de_base.parameters
@@ -162,7 +158,7 @@ def Metropolis_Hasting(beta, data, type_model, ite = 10, analyse= False):
         params["latent_dim"] = 20
 
     archi=get_archi(model_de_base, data)
-    qualite = test(type_model, archi, params, data)
+    qualite = test(type_model, archi, params, data,metrique,nom_de_la_métrique)
 
     resultats=[]
 
@@ -170,7 +166,7 @@ def Metropolis_Hasting(beta, data, type_model, ite = 10, analyse= False):
     for i in range(ite):
         print("MH étape : " +str(i))
         archi_test, params_test = adjacent(archi, params)
-        qualite_test = test(type_model,archi_test, params_test, data)
+        qualite_test = test(type_model,archi_test, params_test, data, metrique,nom_de_la_métrique)
 
         if random.random() < np.exp((qualite-qualite_test)/beta):
 
@@ -182,7 +178,7 @@ def Metropolis_Hasting(beta, data, type_model, ite = 10, analyse= False):
             qualite=qualite_test
             print(params)
             for reseau in archi.keys():
-                print(reseau + " : " + str(archi[reseau]["layer_sizes"]))
+                print(reseau + " : " + str(archi[reseau]["layer_sizes"]) + "        "+ str(archi[reseau]["activation"]))
             print("")
             print("")
 
@@ -201,7 +197,7 @@ def Metropolis_Hasting(beta, data, type_model, ite = 10, analyse= False):
 
 
 
-def generer_resultats(beta, data,model,  ite, nom_fichier):
+def generer_resultats(beta, data,model,  ite, nom_fichier, metrique=score, nom_de_la_metrique="score"):
     results = Metropolis_Hasting(beta, data, model, ite, analyse= True)
     with open(nom_fichier, "wb") as f:
         pickle.dump(results, f)
@@ -216,7 +212,7 @@ def charger_resultats(nom_fichier):
 #data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
 data=pd.read_csv("data/data_gdp.csv")
 #resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
-generer_resultats(0.1,data, GAN, ite = 1000, nom_fichier="results_pkl\\resultsGAN_PIB.pkl")
+generer_resultats(0.1,data, GAN, ite = 1000, nom_fichier="results_pkl\\resultsGAN_PIB.pkl", metrique=score ,nom_de_la_metrique="score" )
 """
 results=charger_resultats("results_pkl\\resultsXTSGAN.pkl")
 sorted_results = sorted(results, key=lambda x: x[1])
