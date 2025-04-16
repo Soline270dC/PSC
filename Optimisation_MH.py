@@ -1,7 +1,7 @@
 
 
 from time_series_gan import *
-from time_series_gan import score
+from time_series_gan.metrics import score
 
 
 import copy
@@ -215,9 +215,9 @@ def charger_resultats(nom_fichier):
 
 
 #data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
-data=pd.read_csv("data/data_gdp.csv")
-#resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
-generer_resultats(0.1,data, GAN, ite = 1000, nom_fichier="results_pkl\\resultsGAN_PIB.pkl", metrique=score ,nom_de_la_metrique="score" )
+# data=pd.read_csv("data/data_gdp.csv")
+# #resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
+# generer_resultats(0.1, data, GAN, ite = 1000, nom_fichier="results_pkl\\resultsGAN_PIB.pkl", metrique=score, nom_de_la_metrique = "score")
 
 
 """

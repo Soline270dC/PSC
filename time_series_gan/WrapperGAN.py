@@ -51,7 +51,7 @@ class WrapperGAN(ABC):
             else:
                 self.parameters[param] = params[param]
 
-    def set_metrics(self, metrics):
+    def set_metrics(self, metrics: dict[str, dict[str, any]]):
         suppr = []
         remp = []
         if not isinstance(metrics, dict):
@@ -89,7 +89,7 @@ class WrapperGAN(ABC):
         pass
 
     @staticmethod
-    def modify_architecture(model, architecture, layer_sizes, activation=None):
+    def modify_architecture(model: Architecture, architecture: dict[str,dict[str,any]], layer_sizes: list[int], activation=None):
         if not isinstance(model, Architecture):
             raise Exception("Vous ne pouvez pas modifier ce modèle")
         model.modify_architecture(architecture=architecture, layer_sizes=layer_sizes, activation=activation)
@@ -142,10 +142,10 @@ class WrapperGAN(ABC):
         generated_data = self.generate_samples(n_samples)
         return metric(samples, generated_data, **metric_args)
 
-    def compute_train_metric(self, metric, metric_args):
+    def compute_train_metric(self, metric, metric_args = {}):
         return self.compute_metric(metric, metric_args, self.train_data, len(self.train_data))
 
-    def compute_val_metric(self, metric, metric_args):
+    def compute_val_metric(self, metric, metric_args = {}):
         return self.compute_metric(metric, metric_args, self.val_data, len(self.val_data))
 
     def compute_train_wass_dist(self):

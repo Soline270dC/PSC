@@ -129,6 +129,6 @@ def score(P, Q, d = lambda x, y : np.linalg.norm(x - y)) :
     """
     k = 0.27
     o = ONND(P, Q, d)*np.power(len(Q), k)/10
-    w = dWasserstein(P, Q)*100
+    w = dWasserstein(P, Q)*80
     f = dFrechet(P, Q, d)
     return 0.4*w + 0.4*f + 0.2*o

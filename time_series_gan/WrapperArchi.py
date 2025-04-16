@@ -7,14 +7,14 @@ class Architecture(nn.Module):
     Flexible neural network module supporting multiple architectures for time series analysis.
     """
 
-    def __init__(self, input_dim, output_dim, sigmoid=True, architecture="MLP", layer_sizes=None, activation=nn.LeakyReLU(0.2, inplace=True)):
+    def __init__(self, input_dim, output_dim, sigmoid=True, architecture="MLP", layer_sizes: list[int]|None =None, activation=nn.LeakyReLU(0.2, inplace=True)):
         super(Architecture, self).__init__()
 
-        self.architecture = architecture
+        self.architecture: dict[str,dict[str, any]] = architecture
         self.activation = activation
-        self.sigmoid = sigmoid
-        self.input_dim = input_dim
-        self.output_dim = output_dim
+        self.sigmoid: bool = sigmoid
+        self.input_dim: int = input_dim
+        self.output_dim: int = output_dim
 
         # Default architecture if none is provided
         if layer_sizes is None:
@@ -44,7 +44,7 @@ class Architecture(nn.Module):
         else:
             raise ValueError(f"Unsupported architecture: {self.architecture}")
 
-    def _build_mlp(self, input_dim, layer_sizes):
+    def _build_mlp(self, input_dim: int, layer_sizes: list[int]):
         if layer_sizes[-1] != self.output_dim:
             raise Exception(f"La dernière couche doit avoir la dimension de sortie {self.output_dim}")
         layers = []
@@ -103,7 +103,7 @@ class Architecture(nn.Module):
             layers.append(nn.Sigmoid())
         return nn.Sequential(*layers)
 
-    def modify_architecture(self, architecture, layer_sizes, activation=None):
+    def modify_architecture(self, architecture: dict[str, dict[str, any]], layer_sizes: list[int], activation=None):
         """Modifies the architecture by rebuilding the model with a new structure."""
         self.architecture = architecture
         if activation is not None:
