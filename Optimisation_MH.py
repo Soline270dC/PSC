@@ -73,11 +73,11 @@ def adjacent(archi, params):
             candidat = params[param]
 
         if param == "latent_dim":
-            return min (candidat,50)
+            return min (candidat,100)
         elif param == "epochs":
             return max(20, min (candidat, 150))
         elif param == "hidden_dim":
-            candidat = min(candidat, 50)
+            candidat = min(candidat, 100)
             new_archi["generator"]["layer_sizes"][-1] = candidat
             return candidat
         elif param == "seq_length":
