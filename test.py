@@ -108,16 +108,16 @@ val = 0
 N = 10
 
 for _ in range(N) :
-    r = np.random.uniform(size = (1000, 8))
-    g = np.random.uniform(size = (1000, 8))
-    val += dFrechet(r, g)*exp(0.27*log(1000))/N
-    # for i in range(n) :
-    #     valO[i] += dWasserstein(r, g[:ndata[i]])/div
-print("dFrechet -", val)
+    r = np.random.uniform(size = (ndata[-1], 2))
+    g = np.random.uniform(size = (ndata[-1], 2))
+    # val += dFrechet(r, g)*exp(0.27*log(1000))/N
+    for i in range(n) :
+        valO[i] += dWasserstein(r, g[:ndata[i]])/N
+print("dWasser -", valO)
 
-# plt.plot(ndata, valO)
-# plt.title("dWasser en fonction de la taille de G")
-# plt.semilogx()
-# plt.xlabel("taille de G")
-# plt.ylabel("dWasser(R, G)")
-# plt.show()
+plt.plot(ndata, valO)
+plt.title("dWasser en fonction de la taille de G")
+plt.semilogx()
+plt.xlabel("taille de G")
+plt.ylabel("dWasser(R, G)")
+plt.show()
