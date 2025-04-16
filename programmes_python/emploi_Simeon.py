@@ -64,7 +64,7 @@ def adjacent(archi, params):
             return round(x, sig - int(math.floor(math.log10(abs(x)))) - 1)
 
 
-        variation = random.uniform(0.5, 2.)
+        variation = np.exp(random.uniform(-1., 1.))
         
         if type(params[param]) == int:
             candidat= int(params[param] * variation) 
@@ -79,6 +79,9 @@ def adjacent(archi, params):
         elif param == "hidden_dim":
             candidat = min(candidat, 50)
             new_archi["generator"]["layer_sizes"][-1] = candidat
+            return candidat
+        elif param == "seq_length":
+            return params[param]
         else:
             return candidat
 
@@ -97,6 +100,7 @@ def adjacent(archi, params):
         new_archi[reseau]["activation"] = modifier_fct_activation(reseau)
         print("modification de la fonction d'activation du " + reseau)
     else:
+        
         for param in list(params.keys()):
             new_params[param] = modifier_1_param(param)
         print("modification des paramètres")
@@ -117,6 +121,9 @@ def get_archi(model_de_base, data):
         }
         if "hidden_dim" in model_de_base.parameters:  
             archi["generator"]["layer_sizes"][-1]= model_de_base.parameters["hidden_dim"]
+        
+        if isinstance(model_de_base, XTSGAN):
+            archi["generator"]["layer_sizes"][-1]= model_de_base.parameters["seq_length"]*data.shape[1]
 
     if "lr_c" in model_de_base.parameters:
         archi["critic"] = {
@@ -131,6 +138,8 @@ def get_archi(model_de_base, data):
             "activation": "ReLU"
         }
     return archi
+
+
 
 def Metropolis_Hasting(beta, data, type_model, ite = 10, analyse= False):
 
@@ -201,8 +210,9 @@ def charger_resultats(nom_fichier):
         results = pickle.load(f)
     return results
 
-Metropolis_Hasting(0.1, data,TimeGAN, ite = 100, analyse=False)
-#generer_resultats(0.1,data, WGAN, ite = 1000, nom_fichier="results_pkl\\resultsWGAN2.pkl")
+
+#resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
+generer_resultats(0.1,data, XTSGAN, ite = 1000, nom_fichier="results_pkl\\resultsXTSGAN.pkl")
 """
 results=charger_resultats("results_pkl\\resultsWGAN2.pkl")
 sorted_results = sorted(results, key=lambda x: x[1])
@@ -217,5 +227,59 @@ for i in range (15):
     for reseau in archi.keys():
         print(reseau + " : " + str(archi[reseau]["layer_sizes"]) + "     " + str(archi[reseau]["activation"]))
     print("")
+
+"""
+
+
+
+
+
+
+"""
+----------------------------------------------------------------------------------------------
+RESULTATS
+----------------------------------------------------------------------------------------------
+
+
+WGAN
+500 ite
+
+{'lr_g': 0.009446, 'lr_c': 0.03663, 'epochs': 100, 'batch_size': 234, 'latent_dim': 47, 'n_critic': 1, 'lambda_gp': 4.822}
+generator : [4]     TanH()
+critic : [49, 11, 37, 22, 41, 38, 24, 27, 14, 1]     Sigmoid()
+=> 0.20 (DOUBLE CHECK ~0.4-0.5)
+
+{'lr_g': 0.004592, 'lr_c': 0.05486, 'epochs': 92, 'batch_size': 36, 'latent_dim': 26, 'n_critic': 1, 'lambda_gp': 4.118}
+generator : [4]      TanH()
+critic : [22, 41, 13, 1]        TanH()
+=> 0.25 (DOUBLE CHECK ~0.25 - 0.3)
+
+        _______________________________________________________
+
+TIMEGAN
+25 ite
+(PB un fit prend ~3min sur ma machine. => Demander au SMAT pour des résultats probants)
+{'lr_g': 0.001097, 'lr_d': 0.001871, 'lr_e': 0.001838, 'lr_r': 0.0007295, 'epochs': 100, 'batch_size': 27, 'latent_dim': 28, 'hidden_dim': 17, 'seq_length': 7, 'n_critic': 2}
+generator : [11, 17]
+discriminator : [25, 15, 1]
+=> 0.28
+
+
+
+        ________________________________________________________
+
+TIMEWGAN
+50 ite (fit entre 30 sec et 3 min)
+{'lr_g': 0.001351, 'lr_c': 0.005018, 'lr_e': 0.003824, 'lr_r': 0.001581, 'epochs': 100, 'batch_size': 76, 'latent_dim': 7, 'hidden_dim': 11, 'seq_length': 25, 'n_critic': 10, 'lambda_gp': 0.1156}
+generator : [43, 11]
+critic : [33, 37, 1]
+=> 0.48
+
+XTSGAN
+120 ite (fit jusque 10 min)
+{'lr_g': 0.0003576, 'lr_c': 0.003743, 'epochs': 100, 'batch_size': 2, 'latent_dim': 27, 'seq_length': 10, 'n_critic': 5, 'lambda_gp': 0.7225}
+generator : [40]
+critic : [42, 1]
+=> 0.15  
 
 """
