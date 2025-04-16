@@ -6,6 +6,7 @@ import copy
 import random
 import math
 import pickle
+import pandas
 
 data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
 metrics = {
@@ -211,10 +212,13 @@ def charger_resultats(nom_fichier):
     return results
 
 
+
+#data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
+data=pd.read_csv("data/data_gdp.csv")
 #resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
-generer_resultats(0.1,data, XTSGAN, ite = 1000, nom_fichier="results_pkl\\resultsXTSGAN.pkl")
+generer_resultats(0.1,data, GAN, ite = 1000, nom_fichier="results_pkl\\resultsGAN_PIB.pkl")
 """
-results=charger_resultats("results_pkl\\resultsWGAN2.pkl")
+results=charger_resultats("results_pkl\\resultsXTSGAN.pkl")
 sorted_results = sorted(results, key=lambda x: x[1])
 
 for i in range (15):
@@ -222,13 +226,13 @@ for i in range (15):
     print(sorted_results[i][1])
     archi=sorted_results[i][2]
     params=sorted_results[i][3]
-    print("nouvelle estimation : " + str(test(WGAN, archi, params, data)))
+    print("nouvelle estimation : " + str(test(XTSGAN, archi, params, data)))
     print(params)
     for reseau in archi.keys():
         print(reseau + " : " + str(archi[reseau]["layer_sizes"]) + "     " + str(archi[reseau]["activation"]))
     print("")
-
 """
+
 
 
 
