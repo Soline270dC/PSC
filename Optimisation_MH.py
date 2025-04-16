@@ -213,23 +213,30 @@ def charger_resultats(nom_fichier):
     return results
 
 
+def reestimer(model, archi, param, data, metrique, nom_de_la_metrique):
+    esti=[]
+    for i in range (15):
+        esti.append(test(model, archi, param, data, metrique, nom_de_la_metrique))
+    return np.mean(sorted(esti)[:12])
+
+
 
 #data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
-data=pd.read_csv("data/data_genhack.csv")
+data=pd.read_csv("data/synthetic_data.csv")
 #resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
-generer_resultats(3., data, GAN, ite = 200, nom_fichier="results_pkl\\results_GAN_GENHACK.pkl", metrique=score ,nom_de_la_metrique="score" )
+generer_resultats(3., data, TimeGAN, ite =  1000, nom_fichier="results_pkl\\results_TimeGAN_GDP.pkl", metrique=score ,nom_de_la_metrique="score" )
 
 
 
-results=charger_resultats("results_pkl\\resultsGAN_PIB.pkl")
-sorted_results = sorted(results, key=lambda x: x[1])
-
+results=charger_resultats("results_pkl\\results_GAN_SYNTHE.pkl")
+sorted_results = sorted(results, key=lambda x: x[1]) 
+   
 for i in range (15):
     print(sorted_results[i][0]) # numero de l'itération
     print(sorted_results[i][1]) # score
     archi=sorted_results[i][2] 
     params=sorted_results[i][3]
-    print("nouvelle estimation : " + str(test(GAN, archi, params, data, score, "score")))
+    #print("nouvelle estimation : " + str(reestimer(GAN, archi, params, data, score, "score")))
     print(params)
     for reseau in archi.keys():
         print(reseau + " : " + str(archi[reseau]["layer_sizes"]) + "     " + str(archi[reseau]["activation"]))
