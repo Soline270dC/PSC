@@ -220,7 +220,7 @@ def reestimer(model, archi, param, data, metrique, nom_de_la_metrique):
     return np.mean(sorted(esti)[:12])
 
 
-
+"""
 #data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
 data=pd.read_csv("data/synthetic_data.csv")
 #resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
@@ -241,7 +241,7 @@ for i in range (15):
     for reseau in archi.keys():
         print(reseau + " : " + str(archi[reseau]["layer_sizes"]) + "     " + str(archi[reseau]["activation"]))
     print("")
-
+"""
 
 
 
