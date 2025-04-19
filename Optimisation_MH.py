@@ -1,7 +1,7 @@
 
 
 from time_series_gan import *
-from time_series_gan import score
+from time_series_gan.metrics import score
 
 
 import copy
@@ -220,7 +220,7 @@ def reestimer(model, archi, param, data, metrique, nom_de_la_metrique):
     return np.mean(sorted(esti)[:12])
 
 
-
+"""
 #data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
 
 #resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
