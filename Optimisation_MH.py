@@ -222,13 +222,12 @@ def reestimer(model, archi, param, data, metrique, nom_de_la_metrique):
 
 
 #data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
-data=pd.read_csv("data/synthetic_data.csv")
+
 #resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
-generer_resultats(3., data, TimeGAN, ite =  1000, nom_fichier="results_pkl\\results_TimeGAN_GDP.pkl", metrique=score ,nom_de_la_metrique="score" )
-
-
-
-results=charger_resultats("results_pkl\\results_GAN_SYNTHE.pkl")
+data=pd.read_csv("data/synthetic_data.csv")
+generer_resultats(3., data, TimeGAN, ite =  1000, nom_fichier="results_pkl\\results_TimeGAN_SYNTHE.pkl", metrique=score ,nom_de_la_metrique="score" )
+"""
+results=charger_resultats("results_pkl\\results_TimeGAN_PIB.pkl")
 sorted_results = sorted(results, key=lambda x: x[1]) 
    
 for i in range (15):
@@ -236,12 +235,12 @@ for i in range (15):
     print(sorted_results[i][1]) # score
     archi=sorted_results[i][2] 
     params=sorted_results[i][3]
-    #print("nouvelle estimation : " + str(reestimer(GAN, archi, params, data, score, "score")))
+    #print("nouvelle estimation : " + str(reestimer(TimeGAN, archi, params, data, score, "score")))
     print(params)
     for reseau in archi.keys():
         print(reseau + " : " + str(archi[reseau]["layer_sizes"]) + "     " + str(archi[reseau]["activation"]))
     print("")
-
+"""
 
 
 
