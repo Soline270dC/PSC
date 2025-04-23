@@ -128,7 +128,7 @@ def score(P, Q, d = lambda x, y : np.linalg.norm(x - y)) :
     ``score = 0.4*dWasser*10^2 + 0.4*dFrechet + 0.2*ONND*10^-1`` where we have rescaling factor whose order of magnitude was empirically estimated 
     """
     k = 0.27
-    o = ONND(P, Q, d)*np.power(len(Q), k)/10
+    o = ONND(P, Q, d)*np.power(len(Q), k)
     w = dWasserstein(P, Q)*30
     f = dFrechet(P, Q, d)
     return 0.4*w + 0.4*f + 0.2*o
