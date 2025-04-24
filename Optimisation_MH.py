@@ -1,7 +1,7 @@
 
 
 from time_series_gan import *
-from time_series_gan.metrics import score
+from time_series_gan.metrics import score, dFrechet, dWasserstein, ONND
 
 
 import copy
@@ -10,16 +10,22 @@ import math
 import pickle
 import pandas as pd
 import numpy as np
+from scipy import stats
 import torch.nn as nn
 
 
-def test (type_model, architectures, params, data, metrique, nom_de_la_métrique):
-    model = type_model()
-    model.set_metrics({nom_de_la_métrique:{"function":metrique, "metric_args":{}}})
-
-    model.set_data(data)
-    return model.fit(params=params, architectures=architectures, verbose=False, save=False)[nom_de_la_métrique][1]
-
+def test (type_model, architectures, params, data, metrique, nom_de_la_métrique, esti= False):
+    if esti == False:
+        model = type_model()
+        model.set_metrics({nom_de_la_métrique:{"function":metrique, "metric_args":{}}})
+        model.set_data(data)
+        return model.fit(params=params, architectures=architectures, verbose=False, save=False)[nom_de_la_métrique][1]
+    else:
+        model = type_model()
+        model.set_metrics({score:{"function":score, "metric_args":{}}, dFrechet:{"function":dFrechet, "metric_args":{}}, dWasserstein:{"function":dWasserstein, "metric_args":{}}, ONND:{"function":ONND, "metric_args":{}}})
+        model.set_data(data)
+        result = model.fit(params=params, architectures=architectures, verbose=False, save=False)
+        return (result [score][1], result[dFrechet][1], result[dWasserstein][1], result[ONND][1])
 
 def adjacent(archi, params):
     liste_fct_transi = [nn.ReLU(), nn.Tanh(), nn.Sigmoid()]
@@ -74,6 +80,8 @@ def adjacent(archi, params):
 
         if param == "latent_dim":
             return min (candidat,100)
+        if param == "batch_size":
+            return max(10, candidat)
         elif param == "epochs":
             return max(20, min (candidat, 150))
         elif param == "hidden_dim":
@@ -214,33 +222,69 @@ def charger_resultats(nom_fichier):
 
 
 def reestimer(model, archi, param, data, metrique, nom_de_la_metrique):
-    esti=[]
-    for i in range (15):
-        esti.append(test(model, archi, param, data, metrique, nom_de_la_metrique))
-    return np.mean(sorted(esti)[:12])
+    esti_score=[]
+    esti_dfrechet=[]
+    esti_dwasserstein=[]
+    esti_onnd=[]
+    for i in range (5 ):
+
+        esti=test(model, archi, param, data, metrique, nom_de_la_metrique, True)
+        esti_score.append(esti[0])
+        esti_dfrechet.append(esti[1])
+        esti_dwasserstein.append(esti[2])
+        esti_onnd.append(esti[3])
+    print(esti_score)
+    print(esti_dfrechet)
+    print(esti_dwasserstein)
+    print(esti_onnd)
+    print("")
+
+    print("score : " + str(calculer_incertitude(esti_score)[0]) + " +/- " + str(calculer_incertitude(esti_score)[1]))
+    print("dFrechet : " + str(calculer_incertitude(esti_dfrechet)[0]) + " +/- " + str(calculer_incertitude(esti_dfrechet)[1]))
+    print("dWasserstein : " + str(calculer_incertitude(esti_dwasserstein)[0]) + " +/- " + str(calculer_incertitude(esti_dwasserstein)[1]))
+    print("ONND : " + str(calculer_incertitude(esti_onnd)[0]) + " +/- " + str(calculer_incertitude(esti_onnd)[1]))
+    return None
 
 
-"""
+def calculer_incertitude(data):
+    """
+    Calcule la moyenne et l'incertitude à 95 % pour un ensemble de données.
+    
+    Parameters:
+    data (list or numpy array): Liste ou tableau des données numériques.
+    
+    Returns:
+    tuple: (moyenne, incertitude à 95%)
+    """
+    n = len(data)  # Taille de l'échantillon
+    mean = np.mean(data)  # Moyenne
+    std_dev = np.std(data, ddof=1)  # Écart-type (échantillon)
+    se = std_dev / np.sqrt(n)  # Erreur-type
+    t_factor = stats.t.ppf(0.975, df=n-1)  # t de Student à 95 % (bilatéral)
+    uncertainty = t_factor * se  # Incertitude à 95 %
+    
+    return round(mean, 3), round(uncertainty, 3)
+
 #data=prep_data()[["YIELD_station_49", "YIELD_station_80", "YIELD_station_40", "YIELD_station_63"]]
 
 #resultats = Metropolis_Hasting(0.1, data,XTSGAN, ite = 100, analyse=True)
-data=pd.read_csv("data/synthetic_data.csv")
-generer_resultats(3., data, TimeGAN, ite =  1000, nom_fichier="results_pkl\\results_TimeGAN_SYNTHE.pkl", metrique=score ,nom_de_la_metrique="score" )
-"""
-results=charger_resultats("results_pkl\\results_TimeGAN_PIB.pkl")
-sorted_results = sorted(results, key=lambda x: x[1]) 
+data=pd.read_csv("data/data_genhack.csv")
+#generer_resultats(3., data, TimeGAN, ite =  200, nom_fichier="results_pkl\\results_.pkl", metrique=score ,nom_de_la_metrique="score" )
+
+
+results=charger_resultats("results_pkl\\results_TimeGAN_GENHACK.pkl")
+sorted_results = sorted(results, key=lambda x : x[1]) 
    
-for i in range (15):
+for i in range (2 ):
     print(sorted_results[i][0]) # numero de l'itération
     print(sorted_results[i][1]) # score
     archi=sorted_results[i][2] 
     params=sorted_results[i][3]
-    #print("nouvelle estimation : " + str(reestimer(TimeGAN, archi, params, data, score, "score")))
+    reestimer(TimeGAN, archi, params, data, score, "score")
     print(params)
     for reseau in archi.keys():
         print(reseau + " : " + str(archi[reseau]["layer_sizes"]) + "     " + str(archi[reseau]["activation"]))
     print("")
-"""
 
 
 
