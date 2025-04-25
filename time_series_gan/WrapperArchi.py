@@ -7,7 +7,7 @@ class Architecture(nn.Module):
     Flexible neural network module supporting multiple architectures for time series analysis.
     """
 
-    def __init__(self, input_dim, output_dim, sigmoid=True, architecture="MLP", layer_sizes: list[int]|None =None, activation=nn.LeakyReLU(0.2, inplace=True)):
+    def __init__(self, input_dim, output_dim, sigmoid=True, architecture="MLP", layer_sizes=None, activation=nn.LeakyReLU(0.2, inplace=True)):
         super(Architecture, self).__init__()
 
         self.architecture: dict[str,dict[str, any]] = architecture
