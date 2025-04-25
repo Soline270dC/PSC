@@ -1,0 +1,82 @@
+Architectures obtenues :
+
+Gan PIB
+
+{'lr_g': 0.003827, 'lr_d': 0.003292, 'epochs': 150, 'batch_size': 217, 'latent_dim': 1}
+generator : [52, 1]     Sigmoid()
+discriminator : [42, 99, 14, 16, 1]     ReLU()
+
+
+{'lr_g': 0.001384, 'lr_d': 0.0312, 'epochs': 108, 'batch_size': 6, 'latent_dim': 1}
+generator : [10, 19, 87, 1]     Tanh()
+discriminator : [99, 64, 14, 89, 1]     Tanh()
+
+Gan SYNTHE
+
+{'lr_g': 0.0005932, 'lr_d': 0.0514, 'epochs': 40, 'batch_size': 3, 'latent_dim': 1}
+generator : [78, 15, 20, 1]     Tanh()
+discriminator : [70, 1]     ReLU()
+
+
+{'lr_g': 0.0004428, 'lr_d': 0.06699, 'epochs': 39, 'batch_size': 6, 'latent_dim': 1}
+generator : [78, 15, 46, 20, 49, 1]     ReLU()
+discriminator : [70, 1]     Sigmoid()
+
+GAN GenHACK
+
+{'lr_g': 0.000197, 'lr_d': 0.004087, 'epochs': 150, 'batch_size': 1, 'latent_dim': 18}
+generator : [75, 4]     Sigmoid()
+discriminator : [63, 1]     Sigmoid()
+
+{'lr_g': 0.0002839, 'lr_d': 0.007595, 'epochs': 150, 'batch_size': 1, 'latent_dim': 4}
+generator : [48, 74, 4]     ReLU()
+discriminator : [43, 80, 1]     Sigmoid()
+
+
+
+TimeGAN PIB
+{'lr_g': 0.0004119, 'lr_d': 0.009304, 'lr_e': 0.0001571, 'lr_r': 6.21e-06, 'epochs': 58, 'batch_size': 2, 'latent_dim': 3, 'hidden_dim': 2, 'seq_length': 10, 'n_critic': 1}
+generator : [44, 61, 2]     ReLU()
+discriminator : [69, 24, 89, 1]     Sigmoid()
+
+
+{'lr_g': 0.0005184, 'lr_d': 0.004196, 'lr_e': 6.291e-05, 'lr_r': 1.524e-05, 'epochs': 21, 'batch_size': 1, 'latent_dim': 12, 'hidden_dim': 1, 'seq_length': 10, 'n_critic': 1}
+generator : [44, 61, 1]     Sigmoid()
+discriminator : [69, 24, 89, 1]     Sigmoid()
+
+
+TIMEGan SYNTHE
+{'lr_g': 0.004329, 'lr_d': 0.04913, 'lr_e': 7.508e-07, 'lr_r': 0.004244, 'epochs': 76, 'batch_size': 18, 'latent_dim': 1, 'hidden_dim': 1, 'seq_length': 10, 'n_critic': 17}
+generator : [38, 72, 1]     ReLU
+discriminator : [81, 1]     Tanh()
+
+params = {'lr_g': 0.00164, 'lr_d': 0.001969, 'lr_e': 0.0002164, 'lr_r': 0.0006666, 'epochs': 23, 'batch_size': 14, 'latent_dim': 19, 'hidden_dim': 15, 'seq_length': 10, 'n_critic': 1}
+archi = {'generator': {'architecture': 'MLP', 'layer_sizes': [25, 15], 'activation': 'ReLU'}, 'discriminator': {'architecture': 'MLP', 'layer_sizes': [14, 1], 'activation': 'ReLU'}}
+
+
+TIMEGan GENHACK
+
+{'lr_g': 0.004009, 'lr_d': 0.005011, 'lr_e': 0.001161, 'lr_r': 0.0002189, 'epochs': 108, 'batch_size': 27, 'latent_dim': 4, 'hidden_dim': 23, 'seq_length': 10, 'n_critic': 3}
+generator : [14, 23]     Tanh()
+discriminator : [61, 1]     Sigmoid()
+
+{'lr_g': 0.002079, 'lr_d': 0.001053, 'lr_e': 0.0007055, 'lr_r': 0.0006815, 'epochs': 61, 'batch_size': 33, 'latent_dim': 8, 'hidden_dim': 32, 'seq_length': 10, 'n_critic': 4}
+generator : [14, 32]     ReLU
+discriminator : [87, 14, 1]     Tanh()
+
+
+TimeWGAN - PIB
+archi = {'generator': {'architecture': 'MLP', 'layer_sizes': [64, 21, 30], 'activation': 'ReLU'}, 'critic': {'architecture': 'MLP', 'layer_sizes': [80, 57, 1], 'activation': 'ReLU'}}
+params = {'lr_g': 0.0005526, 'lr_c': 0.001336, 'lr_e': 0.002986, 'lr_r': 0.001287, 'epochs': 150, 'batch_size': 14, 'latent_dim': 10, 'hidden_dim': 30, 'seq_length': 10, 'n_critic': 4, 'lambda_gp': 0.188}
+
+WGAN - GenHack
+params = {'lr_g': 0.0008328, 'lr_c': 0.008314, 'epochs': 140, 'batch_size': 89, 'latent_dim': 9, 'n_critic': 1, 'lambda_gp': 0.2247}
+archi = {'generator': {'architecture': 'MLP', 'layer_sizes': [15, 4], 'activation': 'ReLU'}, 'critic': {'architecture': 'MLP', 'layer_sizes': [22, 64, 28, 1], 'activation': 'ReLU'}}
+
+WGAN - PIB
+params = {'lr_g': 0.001751, 'lr_c': 0.000813, 'epochs': 50, 'batch_size': 68, 'latent_dim': 46, 'n_critic': 2, 'lambda_gp': 0.549}
+archi = {'generator': {'architecture': 'MLP', 'layer_sizes': [1], 'activation': 'ReLU'}, 'critic': {'architecture': 'MLP', 'layer_sizes': [62, 1], 'activation': 'ReLU'}}
+
+WGAN - Synthé
+archi = {'generator': {'architecture': 'MLP', 'layer_sizes': [73, 1], 'activation': Tanh()}, 'critic': {'architecture': 'MLP', 'layer_sizes': [63, 53, 67, 1], 'activation': Sigmoid()}}
+params = {'lr_g': 0.003741, 'lr_c': 0.001706, 'epochs': 150, 'batch_size': 35, 'latent_dim': 94, 'n_critic': 2, 'lambda_gp': 0.4408}
