@@ -227,6 +227,7 @@ def reestimer(model, archi, param, data, metrique, nom_de_la_metrique):
 data=pd.read_csv("data/synthetic_data.csv")
 generer_resultats(3., data, TimeGAN, ite =  1000, nom_fichier="results_pkl\\results_TimeGAN_SYNTHE.pkl", metrique=score ,nom_de_la_metrique="score" )
 """
+"""
 results=charger_resultats("results_pkl\\results_TimeGAN_PIB.pkl")
 sorted_results = sorted(results, key=lambda x: x[1]) 
    
